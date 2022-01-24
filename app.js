@@ -5,7 +5,7 @@ const CryptoJS = require("crypto-js");
 const https = require('https')
 
 
-const makeHash = (path, body, queryString)=>{
+const makeHash = (path, body, method, queryString)=>{
   const accessKey = process.env.zephrAccessKey
   const secretKey = process.env.zephrSecretKey // "foobar"
 
@@ -31,7 +31,7 @@ const makeHash = (path, body, queryString)=>{
   // console.log(pm.request.url.getQueryString());
   hashString = hash.update(path)
       .update(queryString)
-      .update(request.method)
+      .update(method)
       .update(timestamp)
       .update(nonce)
       .finalize()
@@ -47,9 +47,9 @@ const app = express()
 const port = 3000
 
 const baseUrl = "https://protocol.api.zephr.com/"
-const userPath = "/v3/users/"
+const userPath = "/v3/users"
 const emailUrl = "https://protocol.api.zephr.com/v3/users/?identifiers.email_address=clintperalta@gmail.com"
-const emailQueryBase = "identifiers.email_address="
+const emailQueryKey = "identifiers.email_address"
 
 app.use(express.json());
 
@@ -77,18 +77,20 @@ app.post('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  const accessKey = process.env.zephrAccessKey
-  const secretKey = process.env.zephrSecretKey
-  console.log('accessKey', accessKey)
-  console.log('secretKey', secretKey)
+
+  const authHeader = makeHash(userPath, '', 'GET', "identifiers.email_address=eric.j.blom@gmail.com")
+  console.log('authHeader', authHeader)
+  
   const options = {
-    hostname: "https://protocol.api.zephr.com/",
-    path: "/v3/users/",
+    hostname: "protocol.api.zephr.com",
+    path: userPath,
     method: 'GET',
     query: {
       'identifiers.email_address': 'eric.j.blom@gmail.com'
     },
-    headers: ''
+    headers: {
+      "Authorization": authHeader,
+    },
   }
   
   const req = https.request(options, res => {
@@ -98,6 +100,9 @@ app.listen(port, () => {
       console.log(d)
     })
   })
-
+  req.on('error', (e) => {
+    console.error(e);
+  });
+  req.end();
   console.log(`Example app listening at http://localhost:${port}`)
 })
