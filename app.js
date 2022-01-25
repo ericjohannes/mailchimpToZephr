@@ -8,26 +8,18 @@ const https = require('https')
 const makeHash = (path, body, method, queryString)=>{
   const accessKey = process.env.zephrAccessKey
   const secretKey = process.env.zephrSecretKey // "foobar"
-
-  // const accessKey = pm.variables.get('zephrAccessKey')
-  // const secretKey = pm.variables.get('zephrSecretKey')
-  // console.log(accessKey);
-  // console.log(secretKey);
-
-  // expanding variables in URL with pm.variables.replaceIn, then constructing path
-  // const path = `/${pm.variables.replaceIn(pm.request.url.path).join('/')}`
-  // console.log(pm.variables);
   const timestamp = new Date().getTime().toString();
   const nonce = (Math.random()).toString();
 
   let hash = CryptoJS.algo.SHA256.create()
   hash.update(secretKey)
+  if(body  && Object.keys(pm.request.body).length){
+    hash.update(body)
+    console.log('added boy')
 
-  // if (pm.request.body && Object.keys(pm.request.body).length) {
-  //     // expanding variables in body before updating hash with payload
-  //     hash.update(pm.variables.replaceIn(pm.request.body.raw))
-  // }
-  hash.update(body)
+  } else {
+    console.log('no added body')
+  }
   // console.log(pm.request.url.getQueryString());
   hashString = hash.update(path)
       .update(queryString)
@@ -38,6 +30,16 @@ const makeHash = (path, body, method, queryString)=>{
       .toString()
 
   const hmac = `ZEPHR-HMAC-SHA256 ${accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
+  // console.log('accessKey', accessKey);
+  // console.log('secretKey', secretKey);
+  // console.log('path', path);
+  // console.log('none', nonce);
+  // console.log('timestamp', timestamp);
+  // console.log('body',body);
+  // console.log('method', method)
+  // console.log('queryString', queryString)
+  // console.log('hashString', hashString)
+  // console.log('hmac', hmac)
   return hmac
 }
 
@@ -78,31 +80,40 @@ app.post('/', (req, res) => {
 
 app.listen(port, () => {
 
-  const authHeader = makeHash(userPath, '', 'GET', "identifiers.email_address=eric.j.blom@gmail.com")
+  const authHeader = makeHash(userPath, null, 'GET', "identifiers.email_address=eric.j.blom@gmail.com")
   console.log('authHeader', authHeader)
   
   const options = {
+    headers: {
+      'Authorization' : authHeader,
+    },
     hostname: "protocol.api.zephr.com",
     path: userPath,
     method: 'GET',
     query: {
       'identifiers.email_address': 'eric.j.blom@gmail.com'
     },
-    headers: {
-      "Authorization": authHeader,
-    },
+    
   }
   
   const req = https.request(options, res => {
     console.log(`statusCode: ${res.statusCode}`)
-  
+    console.log('url', req.url)
+    console.log('during headers', JSON.stringify(req.headers));
+
     res.on('data', d => {
       console.log(d)
+      console.log('on headers', JSON.stringify(req.headers));
+
     })
   })
   req.on('error', (e) => {
     console.error(e);
+    console.log('err headers', JSON.stringify(req.headers));
+
   });
+  console.log('after headers', req.headers);
+  // console.log(req)
   req.end();
   console.log(`Example app listening at http://localhost:${port}`)
 })
