@@ -5,29 +5,42 @@ const CryptoJS = require("crypto-js");
 const https = require('https')
 
 
-const makeHash = (path, body, method, queryString)=>{
+const makeHash = (path, method='', queryString, body )=>{
   const accessKey = process.env.zephrAccessKey
   const secretKey = process.env.zephrSecretKey // "foobar"
   const timestamp = new Date().getTime().toString();
   const nonce = (Math.random()).toString();
 
   let hash = CryptoJS.algo.SHA256.create()
+  /* Order to add to has is
+   * secret key
+   * body if it's there
+   * query string
+   * method
+   * timestamp
+   * nonce
+   */
+
   hash.update(secretKey)
-  if(body  && Object.keys(pm.request.body).length){
+  if(body  && Object.keys(body).length){
     hash.update(body)
     console.log('added boy')
 
   } else {
     console.log('no added body')
   }
+  hash.update(path)
+
+  if(queryString){
+    hash.update(queryString)
+
+  }
   // console.log(pm.request.url.getQueryString());
-  hashString = hash.update(path)
-      .update(queryString)
-      .update(method)
-      .update(timestamp)
-      .update(nonce)
-      .finalize()
-      .toString()
+  hash.update(method)
+  hash.update(timestamp)
+  hashString = hash.update(nonce)
+    .finalize()
+    .toString()
 
   const hmac = `ZEPHR-HMAC-SHA256 ${accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
   // console.log('accessKey', accessKey);
@@ -80,39 +93,36 @@ app.post('/', (req, res) => {
 
 app.listen(port, () => {
 
-  const authHeader = makeHash(userPath, null, 'GET', "identifiers.email_address=eric.j.blom@gmail.com")
+  const authHeader = makeHash(path=userPath, method='GET', queryString='identifiers.email_address=eric.j.blom@gmail.com')
   console.log('authHeader', authHeader)
   
   const options = {
     headers: {
       'Authorization' : authHeader,
+      'User-Agent': 'PostmanRuntime/7.29.0'
+
     },
     hostname: "protocol.api.zephr.com",
-    path: userPath,
+    path: userPath + '?identifiers.email_address=eric.j.blom@gmail.com',
     method: 'GET',
-    query: {
-      'identifiers.email_address': 'eric.j.blom@gmail.com'
-    },
     
   }
   
   const req = https.request(options, res => {
     console.log(`statusCode: ${res.statusCode}`)
-    console.log('url', req.url)
-    console.log('during headers', JSON.stringify(req.headers));
 
+    res.setEncoding('utf8');
     res.on('data', d => {
       console.log(d)
-      console.log('on headers', JSON.stringify(req.headers));
+    console.log('err headers', req.getHeader('Authorization')    );
 
     })
   })
   req.on('error', (e) => {
     console.error(e);
-    console.log('err headers', JSON.stringify(req.headers));
+    console.log('err headers', req.getHeader('Authorization')    );
 
   });
-  console.log('after headers', req.headers);
   // console.log(req)
   req.end();
   console.log(`Example app listening at http://localhost:${port}`)
