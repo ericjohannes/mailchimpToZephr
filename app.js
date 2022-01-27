@@ -4,56 +4,34 @@ const CryptoJS = require("crypto-js");
 
 const https = require('https')
 
-
-const makeHash = (path, method='', queryString, body )=>{
-  const accessKey = process.env.zephrAccessKey
-  const secretKey = process.env.zephrSecretKey // "foobar"
-  const timestamp = new Date().getTime().toString();
-  const nonce = (Math.random()).toString();
-
-  let hash = CryptoJS.algo.SHA256.create()
-  /* Order to add to has is
-   * secret key
-   * body if it's there
-   * query string
-   * method
-   * timestamp
-   * nonce
-   */
-
-  hash.update(secretKey)
-  if(body  && Object.keys(body).length){
-    hash.update(body)
-    console.log('added boy')
-
-  } else {
-    console.log('no added body')
+class Hashenator {
+  constructor(){
+    this.accessKey = process.env.zephrAccessKey
+    this.secretKey = process.env.zephrSecretKey 
   }
-  hash.update(path)
-
-  if(queryString){
-    hash.update(queryString)
-
+  makeHash = ( {path, method, query, body} )=>{
+    const timestamp = new Date().getTime().toString();
+    const nonce = (Math.random()).toString();
+  
+    let hash = CryptoJS.algo.SHA256.create()
+  
+    hash.update(this.secretKey)
+    if(body  && Object.keys(body).length){
+      hash.update(body)
+    } 
+    hash.update(path)
+    if(query){
+      hash.update(query)
+    }
+    hash.update(method)
+    hash.update(timestamp)
+    const hashString = hash.update(nonce)
+      .finalize()
+      .toString()
+  
+    const hmac = `ZEPHR-HMAC-SHA256 ${ this.accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
+    return hmac
   }
-  // console.log(pm.request.url.getQueryString());
-  hash.update(method)
-  hash.update(timestamp)
-  hashString = hash.update(nonce)
-    .finalize()
-    .toString()
-
-  const hmac = `ZEPHR-HMAC-SHA256 ${accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
-  // console.log('accessKey', accessKey);
-  // console.log('secretKey', secretKey);
-  // console.log('path', path);
-  // console.log('none', nonce);
-  // console.log('timestamp', timestamp);
-  // console.log('body',body);
-  // console.log('method', method)
-  // console.log('queryString', queryString)
-  // console.log('hashString', hashString)
-  // console.log('hmac', hmac)
-  return hmac
 }
 
 dotenv.config();
@@ -65,7 +43,7 @@ const baseUrl = "https://protocol.api.zephr.com/"
 const userPath = "/v3/users"
 const emailUrl = "https://protocol.api.zephr.com/v3/users/?identifiers.email_address=clintperalta@gmail.com"
 const emailQueryKey = "identifiers.email_address"
-
+const hasher = new Hashenator()
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -93,7 +71,7 @@ app.post('/', (req, res) => {
 
 app.listen(port, () => {
 
-  const authHeader = makeHash(path=userPath, method='GET', queryString='identifiers.email_address=eric.j.blom@gmail.com')
+  const authHeader = hasher.makeHash({path: userPath, method:'GET', query: 'identifiers.email_address=eric.j.blom@gmail.com'})
   console.log('authHeader', authHeader)
   
   const options = {
