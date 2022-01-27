@@ -42,7 +42,14 @@ const port = 3000
 const baseUrl = "https://protocol.api.zephr.com/"
 const userPath = "/v3/users"
 const emailUrl = "https://protocol.api.zephr.com/v3/users/?identifiers.email_address=clintperalta@gmail.com"
-const emailQueryKey = "identifiers.email_address"
+
+const reqOptions = {
+  headers: {
+    'User-Agent': 'PostmanRuntime/7.29.0'
+  },
+  hostname: "protocol.api.zephr.com",  
+}
+
 const hasher = new Hashenator()
 app.use(express.json());
 
@@ -57,13 +64,32 @@ app.head('/', (req, res) => {
 
 });
 app.post('/', (req, res) => {
-  // console.log( req.body)
+  console.log(`POST request for ${req.body.email}`)
   // get email from req
-  console.log('email', req.body.email)
-  const subscriberEmail = req.body.email
+  const emailQuery= `identifiers.email_address=${req.body.email}`
 
   // send email to zephr to get user id
+  let emailData = {};
+  const authHeader = hasher.makeHash({path: userPath, method:'GET', query: emailQuery}); 
+  const emailOPtions = Object.assign(reqOptions, {method: 'GET', path: userPath + '?' + emailQuery});
+  emailOPtions.headers.Authorization = authHeader
+  const emailReq = https.request(emailOPtions, emailRes => {
+    emailRes.setEncoding('utf8');
+    // TODO: check res.statusCode for 200
+    if(res.statusCode == 200){
+      emailRes.on('data', d => {
+        emailData = d;
+      })
+    }
+    else {
+      console.log('could not retrieve data')
+    }
+  })
+  emailReq.on('error', (e) => {
+    console.error(e);
 
+  });
+  emailReq.end();
   // use user id to set all subscriptions to false
 
   res.send('ok');
@@ -71,37 +97,5 @@ app.post('/', (req, res) => {
 
 app.listen(port, () => {
 
-  const authHeader = hasher.makeHash({path: userPath, method:'GET', query: 'identifiers.email_address=eric.j.blom@gmail.com'})
-  console.log('authHeader', authHeader)
-  
-  const options = {
-    headers: {
-      'Authorization' : authHeader,
-      'User-Agent': 'PostmanRuntime/7.29.0'
-
-    },
-    hostname: "protocol.api.zephr.com",
-    path: userPath + '?identifiers.email_address=eric.j.blom@gmail.com',
-    method: 'GET',
-    
-  }
-  
-  const req = https.request(options, res => {
-    console.log(`statusCode: ${res.statusCode}`)
-
-    res.setEncoding('utf8');
-    res.on('data', d => {
-      console.log(d)
-    console.log('err headers', req.getHeader('Authorization')    );
-
-    })
-  })
-  req.on('error', (e) => {
-    console.error(e);
-    console.log('err headers', req.getHeader('Authorization')    );
-
-  });
-  // console.log(req)
-  req.end();
   console.log(`Example app listening at http://localhost:${port}`)
 })
