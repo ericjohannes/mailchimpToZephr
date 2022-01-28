@@ -1,13 +1,16 @@
 const express = require('express')
 const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
-
+const events = require('events');
 const https = require('https')
+
+let user_ids = new Set()
+
 
 class MakeRequest {
   constructor(){
-    this.accessKey = process.env.zephrAccessKey
-    this.secretKey = process.env.zephrSecretKey 
+    this.accessKey = process.env.zephrAccessKey;
+    this.secretKey = process.env.zephrSecretKey;
     this.baseOptions = {
       headers: {
         'User-Agent': 'PostmanRuntime/7.29.0'
@@ -49,32 +52,42 @@ class MakeRequest {
     options.headers.Authorization = authHeader;
     return options
   }
-  makeRequest = ({path, method, query, body})=>{
+  makeEmailRequest=(email)=>{
+    const emailQuery= `identifiers.email_address=${email}`
+    const userPath = "/v3/users"
+    this._makeRequest({path: userPath, method:'GET', query: emailQuery})
+
+  }
+  makeSecondRequest=(user_id) =>{
+
+
+  }
+  _makeRequest = ({path, method, query, body})=>{
     /* method should be GET, POST, PATCH etc.
      *  
      *
      * 
      */
-    // const authHeader = _makeHash({path: path, method:method, query: query, body: body}); 
-    // let pathWithQuery = path;
-    // if(query){
-    //   pathWithQuery += '?' + emailQuery;
-    // } 
-
-    // const options = Object.assign(this.baseOptions, {method: method, path: pathWithQuery});
-    // options.headers.Authorization = authHeader;
     const options = this._makeOptions({path, method, query, body})
     const req = https.request(options, res => {
       res.setEncoding('utf8');
       if(res.statusCode == 200){
         res.on('data', d => {
-          console.log('d', d)
-          return d;
+          // console.log(d)
+          // if(doAnother){
+          //   this._makeSecondRequest(d.user_id)
+          // }
+          // return d.user_id;
+          const data = JSON.parse(d)
+          user_ids.add(data.user_id)
+          //Fire the 'newId' event:
+          eventEmitter.emit('newId');
+
         })
       }
       else {
         console.log('could not retrieve data');
-        return false;
+        // return false;
       }
     })
     req.on('error', (e) => {
@@ -84,47 +97,30 @@ class MakeRequest {
     }
 }
 
-// const makeRequest = (newOptions)=>{
-//   /* method should be GET, POST, PATCH etc.
-//    * newOptions should 
-//    *
-//    * 
-//    */
-//   const authHeader = hasher.makeHash({path: userPath, method:'GET', query: emailQuery}); 
-//   const options = Object.assign(baseOptions, {method: 'GET', path: userPath + '?' + emailQuery});
-//   emailOPtions.headers.Authorization = authHeader
-//   const req = https.request(emailOPtions, res => {
-//     res.setEncoding('utf8');
 
-//     if(res.statusCode == 200){
-//       res.on('data', d => {
-//         return d
-
-//       })
-//     }
-//     else {
-//       console.log('could not retrieve data based on email')
-//       return
-//     }
-//   })
-// }
 dotenv.config();
 
 const app = express()
 const port = 3000
 
-const baseUrl = "https://protocol.api.zephr.com/"
-const userPath = "/v3/users"
-const emailUrl = "https://protocol.api.zephr.com/v3/users/?identifiers.email_address=clintperalta@gmail.com"
-
-// const reqOptions = {
-//   headers: {
-//     'User-Agent': 'PostmanRuntime/7.29.0'
-//   },
-//   hostname: "protocol.api.zephr.com",  
-// }
 
 const makeRequest = new MakeRequest()
+
+const eventEmitter = new events.EventEmitter();
+
+//Create an event handler:
+var newIdHandler = function () {
+  console.log('new id');
+  user_ids.forEach(id=>{
+    console.log(`id is ${id}`)
+    makeRequest.makeSecondRequest(id)
+  })
+}
+
+//Assign the event handler to an event:
+eventEmitter.on('newId', newIdHandler);
+
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -140,35 +136,12 @@ app.head('/', (req, res) => {
 app.post('/', (req, res) => {
   console.log(`POST request for ${req.body.email}`)
   // get email from req
-  const emailQuery= `identifiers.email_address=${req.body.email}`
+  // const emailQuery= `identifiers.email_address=${req.body.email}`
 
   // send email to zephr to get user id
-  const emailResult = makeRequest.makeRequest({path: userPath, method:'GET', query: emailQuery})
-  console.log(emailResult)
-  // let emailData = {};
-  // const authHeader = hasher.makeHash({path: userPath, method:'GET', query: emailQuery}); 
-  // const emailOPtions = Object.assign(reqOptions, {method: 'GET', path: userPath + '?' + emailQuery});
-  // emailOPtions.headers.Authorization = authHeader
-  // const emailReq = https.request(emailOPtions, emailRes => {
-  //   emailRes.setEncoding('utf8');
-
-  //   if(emailRes.statusCode == 200){
-  //     emailRes.on('data', d => {
-  //       emailData = d;
-  //       console.log(d)
-
-  //     })
-  //   }
-  //   else {
-  //     console.log('could not retrieve data based on email')
-  //   }
-  // })
-  // emailReq.on('error', (e) => {
-  //   console.error(e);
-
-  // });
-  // emailReq.end();
-  // use user id to set all subscriptions to false
+  const result = makeRequest.makeEmailRequest(req.body.email)
+  // const emailResult = makeRequest.makeRequest({path: userPath, method:'GET', query: emailQuery})
+  // console.log(emailResult)
 
   res.send('ok');
 });
