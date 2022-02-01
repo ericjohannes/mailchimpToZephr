@@ -56,31 +56,26 @@ class MakeRequest {
     return options
   }
 
-  async makeEmailRequest(email){
+  makeEmailRequest = async (email)=>{
     const emailQuery= `identifiers.email_address=${email}`
-    const userPath = "/v3/users"
-    // async function doSomethingUseful(parent) {
-      // return the response
-    const result =  await this._makeRequest({path: userPath, method:'GET', query: emailQuery, reqType: 'email'})
-    console.log(result)
+    var path = "/v3/users"
 
-    // }
-    // const result = doSomethingUseful(this)
-    // console.log(result)
-    return result
-
-
+    const result =  await this._makeRequest({path: path, method:'GET', query: emailQuery})
+    console.log('makeEmailRequest result', result)
+    
+    path = `/v3/users/${result.user_id}`;
+    const secondResult = await this._makeRequest({path: path, method:'GET'});
+    return secondResult
   }
 
-  makeSecondRequest=(user_id) =>{
+  makeSecondRequest= async (user_id) =>{
     const path = `/v3/users/${user_id}`;
-    async function doSomethingUseful(parent) {
-      // return the response
-      return await parent._makeRequest({path: path, method:'GET', recType: 'userId'});
-    }
-    const result = doSomethingUseful(this)
-
-    console.log(result)
+   
+    // return the response
+   const result = await this._makeRequest({path: path, method:'GET'});
+   
+   console.log('makeSecondRequest result', result)
+   return result
   }
 
   _makeRequest = (data)=>{
@@ -89,7 +84,7 @@ class MakeRequest {
      *
      * 
      */
-    const {path, method, query, body, reqType} = data;
+    const {path, method, query, body} = data;
     const options = this._makeOptions({path, method, query, body});
     return new Promise((resolve, reject) => {
       const req = https.request(options, res => {
@@ -101,20 +96,7 @@ class MakeRequest {
         });
         res.on('end', () => {
           resolve(JSON.parse(responseBody));
-        });
-        // res.on('data', d => {
-        //   const data = JSON.parse(d)
-        //   if(reqType == 'email'){
-        //     user_ids.add(data.user_id)
-        //     //Fire the 'newId' event:
-        //     eventEmitter.emit('newId');
-        //   } else if(reqType == 'userId'){
-        //     // inProgress.delete()
-        //     console.log('done', d)
-        //   } else{
-        //     console.log('unsupported recType')
-        //   }
-        // })        
+        });      
       })
       req.on('error', (err) => {
         reject(err);
@@ -132,22 +114,6 @@ const port = 3000
 
 
 const makeRequest = new MakeRequest()
-
-const eventEmitter = new events.EventEmitter();
-
-//Create an event handler:
-const newIdHandler = ()=>{
-  console.log('new id');
-  user_ids.forEach(id=>{
-    inProgress.add(id)
-    user_ids.delete(id)
-    console.log(`id is ${id}`)
-    makeRequest.makeSecondRequest(id)
-  })
-}
-
-//Assign the event handler to an event:
-eventEmitter.on('newId', newIdHandler);
 
 app.use(express.json());
 
@@ -169,7 +135,7 @@ app.post('/', (req, res) => {
   // send email to zephr to get user id
   const result = makeRequest.makeEmailRequest(req.body.email)
   // const emailResult = makeRequest.makeRequest({path: userPath, method:'GET', query: emailQuery})
-  // console.log(emailResult)
+  // const secondResult = makeRequest.makeSecondRequest(result.user_id)
 
   res.send('ok');
 });
