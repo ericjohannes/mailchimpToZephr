@@ -1,12 +1,7 @@
 const express = require('express')
 const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
-const events = require('events');
 const https = require('https')
-
-let user_ids = new Set()
-let inProgress = new Set()
-
 
 class MakeRequest {
   constructor(){
@@ -68,16 +63,6 @@ class MakeRequest {
     return secondResult
   }
 
-  makeSecondRequest= async (user_id) =>{
-    const path = `/v3/users/${user_id}`;
-   
-    // return the response
-   const result = await this._makeRequest({path: path, method:'GET'});
-   
-   console.log('makeSecondRequest result', result)
-   return result
-  }
-
   _makeRequest = (data)=>{
     /* method should be GET, POST, PATCH etc.
      *  
@@ -112,7 +97,6 @@ dotenv.config();
 const app = express()
 const port = 3000
 
-
 const makeRequest = new MakeRequest()
 
 app.use(express.json());
@@ -121,21 +105,11 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.head('/', (req, res) => {
-
-  // res.set('hello', 'world');
-  console.log('head request')
-
-});
 app.post('/', (req, res) => {
   console.log(`POST request for ${req.body.email}`)
-  // get email from req
-  // const emailQuery= `identifiers.email_address=${req.body.email}`
 
   // send email to zephr to get user id
   const result = makeRequest.makeEmailRequest(req.body.email)
-  // const emailResult = makeRequest.makeRequest({path: userPath, method:'GET', query: emailQuery})
-  // const secondResult = makeRequest.makeSecondRequest(result.user_id)
 
   res.send('ok');
 });
