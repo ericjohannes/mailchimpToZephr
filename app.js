@@ -22,8 +22,10 @@ class MakeRequest {
     let hash = CryptoJS.algo.SHA256.create()
   
     hash.update(this.secretKey)
-    if(body  && Object.keys(body).length){
+    if(body  && body.length){
+      // hash.update(body)
       hash.update(body)
+
     } 
     hash.update(path)
     if(query){
@@ -34,13 +36,20 @@ class MakeRequest {
     const hashString = hash.update(nonce)
       .finalize()
       .toString()
-  
+
+    console.log('path', path)
+    console.log('method', method)
+    console.log('query', query)
+    console.log('body', body)
+
     const hmac = `ZEPHR-HMAC-SHA256 ${ this.accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
+    console.log('hmac', hmac)
     return hmac
   }
 
-  _makeOptions = ({path, method, query, body})=>{
-    const authHeader = this._makeHash({path: path, method:method, query: query, body: body}); 
+  _makeOptions = (data)=>{
+    const {path, method, query, bodyData} = data;
+    const authHeader = this._makeHash({path: path, method:method, query: query, body: bodyData}); 
     let pathWithQuery = path;
     if(query){
       pathWithQuery += '?' + query;
@@ -53,13 +62,19 @@ class MakeRequest {
 
   makeEmailRequest = async (email)=>{
     const emailQuery= `identifiers.email_address=${email}`
-    var path = "/v3/users"
+    var emailPath = "/v3/users"
 
-    const result =  await this._makeRequest({path: path, method:'GET', query: emailQuery})
+    const result =  await this._makeRequest({path: emailPath, method:'GET', query: emailQuery})
     console.log('makeEmailRequest result', result)
     
-    path = `/v3/users/${result.user_id}`;
-    const secondResult = await this._makeRequest({path: path, method:'GET'});
+    const userPath = `/v3/users/${result.user_id}`;
+    const unsubAll = {
+      policy: false,
+    }
+    const patchPath = `/v3/users/${result.user_id}/attributes`
+    const secondResult = await this._makeRequest({path: patchPath, method:'PATCH', body: unsubAll});
+    const thirdResult = await this._makeRequest({path: userPath, method:'GET' });
+    console.log('thirdResult', thirdResult)
     return secondResult
   }
 
@@ -70,7 +85,8 @@ class MakeRequest {
      * 
      */
     const {path, method, query, body} = data;
-    const options = this._makeOptions({path, method, query, body});
+    let bodyData = body ? JSON.stringify(body) : null
+    const options = this._makeOptions({path, method, query, bodyData});
     return new Promise((resolve, reject) => {
       const req = https.request(options, res => {
         res.setEncoding('utf8');
@@ -86,6 +102,9 @@ class MakeRequest {
       req.on('error', (err) => {
         reject(err);
       });
+      if(bodyData){
+        req.write(bodyData);
+      }
       req.end();
     });
   }
