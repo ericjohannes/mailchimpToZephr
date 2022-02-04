@@ -23,9 +23,7 @@ class MakeRequest {
   
     hash.update(this.secretKey)
     if(body  && body.length){
-      // hash.update(body)
       hash.update(body)
-
     } 
     hash.update(path)
     if(query){
@@ -70,6 +68,18 @@ class MakeRequest {
     const userPath = `/v3/users/${result.user_id}`;
     const unsubAll = {
       policy: false,
+      alerts:false,
+      braintrust:false,
+      china:false,
+      climate:false,
+      enterprise:false,
+      entertainment:false,
+      fintech:false,
+      newsletter:false,
+      pipeline:false,
+      policy:false,
+      "source-code":false,
+      workplace:false,
     }
     const patchPath = `/v3/users/${result.user_id}/attributes`
     const secondResult = await this._makeRequest({path: patchPath, method:'PATCH', body: unsubAll});
