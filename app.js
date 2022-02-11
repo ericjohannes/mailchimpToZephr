@@ -153,7 +153,7 @@ class MakeRequest {
 dotenv.config();
 
 const app = express()
-const port = 3000
+const port = 80
 
 const makeRequest = new MakeRequest()
 
@@ -189,7 +189,7 @@ app.post('/', (req, res) => {
     const bodyData = JSON.parse(req.body.data)
     console.log(`POST request for ${bodyData.email}`)
 
-    // start process wit zephr to unsubscribe them
+    // start process with zephr to unsubscribe them
     // const result = makeRequest.makeEmailRequest(req.body.email)
 
  }
