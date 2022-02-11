@@ -1,3 +1,10 @@
+// following this to install nvm and node on ec2 https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+// curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+// . ~/.nvm/nvm.sh
+// nvm install node
+// node -e "console.log('Running Node.js ' + process.version)"
+// ran `npm install` in my project folder
+
 const express = require('express')
 const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
@@ -157,32 +164,33 @@ const port = 80
 
 const makeRequest = new MakeRequest()
 
-app.use(express.json());
-app.use(express.urlencoded()); // to support URL-encoded bodies
-
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
-
-app.head('/', (req, res) => {
-    // for dev purposes...
-    const timeStamp = + new Date();
-    //const headers = JSON.stringify(req.headers);
-    fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
-    const fileBodyDaya = JSON.parse(req.body.data);
-    fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyDaya, null, 2) , 'utf-8');
-
-  res.send('ok');
-})
-app.post('/', (req, res) => {
-  // TODO: authenticate the message
-  
+const devStuff = (req) =>{
   // for dev purposes...
   const timeStamp = + new Date();
   //const headers = JSON.stringify(req.headers);
   fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
   const fileBodyDaya = JSON.parse(req.body.data);
   fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyDaya, null, 2) , 'utf-8');
+}
+app.use(express.json());
+app.use(express.urlencoded()); // to support URL-encoded bodies
+
+app.get('/', (req, res) => {
+  devStuff(req)
+
+  res.sendFile(__dirname + '/index.html');
+});
+
+app.head('/', (req, res) => {
+  devStuff(req)
+
+  res.send('ok');
+})
+app.post('/', (req, res) => {
+  // TODO: authenticate the message
+  
+  devStuff(req)
+
 
   // check if it's an unsubscribe
   if(req.body.type === "unsubscribe"){
