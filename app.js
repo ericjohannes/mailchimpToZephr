@@ -3,6 +3,35 @@ const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
 const https = require('https')
 
+
+const generateMailchimpSignature = (webhook_key, url, params)=>{
+  // adapted from https://mailchimp.com/developer/transactional/guides/track-respond-activity-webhooks/#authenticating-webhook-requests
+  /* Mailchimp signs each webhook request using the following process:
+   *
+   * 1. Create a string with the webhook’s URL, exactly as you entered it in Mailchimp Transactional (including any query strings, if applicable)
+   * 
+   * 2. Ensure that your string will either be interpreted literally or escape any characters that will be interpreted (i.e., the slashes)
+   * 
+   * 3. Append each POST variable’s key and value to the URL string, with no delimiter
+   * 
+   * 4. Hash the resulting string with HMAC-SHA1, using your webhook’s authentication key to generate a binary signature
+   * 
+   * 5. Base64 encode the binary signature
+   */
+  var signed_data = url;
+  const param_keys = Object.keys(params);
+  param_keys.sort();
+  param_keys.forEach(function (key) {
+      signed_data += key + params[key];
+  });
+
+  //https://cryptojs.gitbook.io/docs/#hmac
+  var hash = CryptoJS.HmacSHA1(signed_data, webhook_key); 
+  
+  // https://cryptojs.gitbook.io/docs/#encoders
+  return CryptoJS.enc.Base64.stringify(hash); 
+}
+
 class MakeRequest {
   constructor(){
     this.accessKey = process.env.zephrAccessKey;
@@ -95,7 +124,7 @@ class MakeRequest {
      * 
      */
     const {path, method, query, body} = data;
-    let bodyData = body ? JSON.stringify(body) : null
+    let bodyData = body ? JSON.stringify(body) : null; // GET requests should have no body, POSTs do
     const options = this._makeOptions({path, method, query, bodyData});
     return new Promise((resolve, reject) => {
       const req = https.request(options, res => {
@@ -129,18 +158,25 @@ const port = 3000
 const makeRequest = new MakeRequest()
 
 app.use(express.json());
+app.use(express.urlencoded()); // to support URL-encoded bodies
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 app.post('/', (req, res) => {
-  console.log(`POST request for ${req.body.email}`)
+  // authenticate the message
 
-  // send email to zephr to get user id
-  const result = makeRequest.makeEmailRequest(req.body.email)
+  // check if it's an unsubscribe
+  if(req.method === 'POST' && req.body.type === "unsubscribe"){
+    const bodyData = JSON.parse(req.body.data)
+    console.log(`POST request for ${bodyData.email}`)
 
-  res.send('ok');
+    // start process wit zephr to unsubscribe them
+    const result = makeRequest.makeEmailRequest(req.body.email)
+
+ }
+ res.send('ok');
 });
 
 app.listen(port, () => {
