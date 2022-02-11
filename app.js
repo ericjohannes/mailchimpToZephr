@@ -2,7 +2,7 @@ const express = require('express')
 const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
 const https = require('https')
-
+const fs = require('fs')
 
 const generateMailchimpSignature = (webhook_key, url, params)=>{
   // adapted from https://mailchimp.com/developer/transactional/guides/track-respond-activity-webhooks/#authenticating-webhook-requests
@@ -164,16 +164,33 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+app.head('/', (req, res) => {
+    // for dev purposes...
+    const timeStamp = + new Date();
+    //const headers = JSON.stringify(req.headers);
+    fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
+    const fileBodyDaya = JSON.parse(req.body.data);
+    fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyDaya, null, 2) , 'utf-8');
+
+  res.send('ok');
+})
 app.post('/', (req, res) => {
-  // authenticate the message
+  // TODO: authenticate the message
+  
+  // for dev purposes...
+  const timeStamp = + new Date();
+  //const headers = JSON.stringify(req.headers);
+  fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
+  const fileBodyDaya = JSON.parse(req.body.data);
+  fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyDaya, null, 2) , 'utf-8');
 
   // check if it's an unsubscribe
-  if(req.method === 'POST' && req.body.type === "unsubscribe"){
+  if(req.body.type === "unsubscribe"){
     const bodyData = JSON.parse(req.body.data)
     console.log(`POST request for ${bodyData.email}`)
 
     // start process wit zephr to unsubscribe them
-    const result = makeRequest.makeEmailRequest(req.body.email)
+    // const result = makeRequest.makeEmailRequest(req.body.email)
 
  }
  res.send('ok');
