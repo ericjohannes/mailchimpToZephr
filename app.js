@@ -184,7 +184,7 @@ app.get('/', (req, res) => {
 app.head('/', (req, res) => {
   devStuff(req)
 
-  res.send('ok');
+  res.sendStatus(200);
 })
 app.post('/', (req, res) => {
   // TODO: authenticate the message
@@ -199,9 +199,9 @@ app.post('/', (req, res) => {
 
     // start process with zephr to unsubscribe them
     // const result = makeRequest.makeEmailRequest(req.body.email)
+    res.sendStatus(200);
 
  }
- res.send('ok');
 });
 
 app.listen(port, () => {
