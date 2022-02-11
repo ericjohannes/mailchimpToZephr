@@ -159,10 +159,10 @@ class MakeRequest {
 
 dotenv.config();
 
-const app = express()
-const port = 80
+const app = express();
+const port = 80;
 
-const makeRequest = new MakeRequest()
+const makeRequest = new MakeRequest();
 
 const devStuff = (req) =>{
   // for dev purposes...
