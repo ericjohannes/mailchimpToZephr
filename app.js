@@ -1,7 +1,7 @@
 // following this to install nvm and node on ec2 https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
 // curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 // . ~/.nvm/nvm.sh
-// nvm install node
+// nvm install node 17.3.1
 // node -e "console.log('Running Node.js ' + process.version)"
 // ran `npm install` in my project folder
 
@@ -192,8 +192,7 @@ app.post('/', (req, res) => {
   devStuff(req)
 
 
-  // check if it's an unsubscribe
-  if(req.body.type === "unsubscribe"){
+  if(req.body.type === "unsubscribe"){   // check if it's an unsubscribe
     const bodyData = JSON.parse(req.body.data)
     console.log(`POST request for ${bodyData.email}`)
 
