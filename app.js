@@ -141,8 +141,8 @@ const devStuff = (req) =>{
   const timeStamp = + new Date();
   //const headers = JSON.stringify(req.headers);
   fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
-  const fileBodyDaya = JSON.parse(req.body.data);
-  fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyDaya, null, 2) , 'utf-8');
+  const fileBodyData = JSON.parse(req.body.data);
+  fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyData, null, 2) , 'utf-8');
 }
 app.use(express.json());
 app.use(express.urlencoded()); // to support URL-encoded bodies
