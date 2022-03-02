@@ -10,6 +10,8 @@ const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
 const https = require('https')
 const fs = require('fs')
+const parseArgs = require('minimist')
+const argv = parseArgs(process.argv.slice(2), opts={'boolean': ['dev']})
 
 class MakeRequest {
   constructor(){
@@ -132,7 +134,7 @@ class MakeRequest {
 dotenv.config();
 
 const app = express();
-const port = __dirname.includes('eblom') ? 3000 : 80; // contains eblom it's dev
+const port = argv['port']; // contains eblom it's dev
 
 const makeRequest = new MakeRequest();
 
@@ -159,18 +161,23 @@ app.head('/', (req, res) => {
   res.sendStatus(200);
 })
 app.post('/', (req, res) => {
-  // TODO: authenticate the message
   
-  devStuff(req)
+  if(argv['dev']){
+    devStuff(req)
+  }
 
 
   if(req.body.type === "unsubscribe"){   // check if it's an unsubscribe
     const bodyData = JSON.parse(req.body.data)
-    console.log(`POST request for ${bodyData.email}`)
+    console.log(`Request to unsubscribe ${bodyData.email}`)
 
     // start process with zephr to unsubscribe them
     // const result = makeRequest.makeEmailRequest(req.body.email)
-    res.sendStatus(200);
+    res.send('{"result":"unsubscribed"}')
+    // res.sendStatus(200);
+
+ } else{
+    res.send('{"result":"not an unsubscribe"}')
 
  }
 });
