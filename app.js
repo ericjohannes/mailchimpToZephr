@@ -138,6 +138,40 @@ const port = argv['port']; // contains eblom it's dev
 
 const makeRequest = new MakeRequest();
 
+const sendToSlack = (msg) =>{
+  const slackToken = process.env.slackToken
+  const req = https.request({
+    headers: {
+      'User-Agent': 'MailChimpToZephr Test',
+      'Content-Type': 'application/json',
+      authorization: `Bearer ${slackToken}`
+    },
+    hostname: "slack.com", 
+    path: "/api/chat.postMessage",
+    method: 'POST',
+    
+  }, res => {
+      res.setEncoding('utf8');
+      let responseBody = '';
+
+      res.on('data', (chunk) => {
+        responseBody += chunk;
+      });
+      res.on('end', () => {
+        return
+        // console.log('end', JSON.parse(responseBody));
+      });      
+  })
+  req.on('error', (err) => {
+    console.log('err', (err));
+  });
+  req.write(JSON.stringify({
+    channel: '#mailchimp-zephr-app',
+    text: msg,
+  }));
+  req.end();
+}
+
 const devStuff = (req) =>{
   // for dev purposes...
   const timeStamp = + new Date();
@@ -150,39 +184,53 @@ app.use(express.json());
 app.use(express.urlencoded()); // to support URL-encoded bodies
 
 app.get('/', (req, res) => {
-  devStuff(req)
-
-  res.sendFile(__dirname + '/index.html');
+  try{
+    if(argv['dev']){
+      devStuff(req)
+    }
+    res.sendFile(__dirname + '/index.html');
+  } catch(err){
+    sendToSlack(err.stack)
+  }
 });
 
-app.head('/', (req, res) => {
-  devStuff(req)
-
-  res.sendStatus(200);
-})
-app.post('/', (req, res) => {
-  
-  if(argv['dev']){
-    devStuff(req)
+app.head('/', (req, res) => { // mailchimp sends a head request to test the endpoint
+  try{
+    if(argv['dev']){
+      devStuff(req)
+    }
+    res.sendStatus(200);
+  } catch(err){
+    sendToSlack(err.stack)
   }
+});
 
+app.post('/', (req, res) => {
+  try{
+    if(argv['dev']){
+      devStuff(req)
+    }
+    if(req.body.type === "unsubscribe"){   // check if it's an unsubscribe
+      const bodyData = JSON.parse(req.body.data)
+      console.log(`Request to unsubscribe ${bodyData.email}`)
 
-  if(req.body.type === "unsubscribe"){   // check if it's an unsubscribe
-    const bodyData = JSON.parse(req.body.data)
-    console.log(`Request to unsubscribe ${bodyData.email}`)
+      // start process with zephr to unsubscribe them
+      // const result = makeRequest.makeEmailRequest(req.body.email)
+      res.send('{"result":"unsubscribed"}')
+      // res.sendStatus(200);
 
-    // start process with zephr to unsubscribe them
-    // const result = makeRequest.makeEmailRequest(req.body.email)
-    res.send('{"result":"unsubscribed"}')
-    // res.sendStatus(200);
-
- } else{
-    res.send('{"result":"not an unsubscribe"}')
-
- }
+    } else{
+        res.send('{"result":"not an unsubscribe"}')
+    }
+  } catch(err){
+    sendToSlack(err.stack)
+  }
 });
 
 app.listen(port, () => {
-
-  console.log(`Example app listening at http://localhost:${port}`)
+  try{
+    console.log(`Example app listening at http://localhost:${port}`)
+  } catch(err){
+    sendToSlack(err.stack)
+  }
 })
