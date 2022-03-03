@@ -15,7 +15,6 @@ const options = {
     hostname: "slack.com", 
     path: "/api/chat.postMessage",
     method: 'POST',
-    
   }
 
 const bodyData = JSON.stringify({

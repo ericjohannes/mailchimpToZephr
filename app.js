@@ -134,7 +134,7 @@ class MakeRequest {
 dotenv.config();
 
 const app = express();
-const port = argv['port']; // contains eblom it's dev
+const port = argv['port'];
 
 const makeRequest = new MakeRequest();
 

@@ -1,12 +1,17 @@
+// runs with two command line arguments --port for port to connect to and --host for hostname to connect to
+// use like `node testListener.js --port=3000 --host=localhost`
 const http = require('http')
+
+const parseArgs = require('minimist')
+const argv = parseArgs(process.argv.slice(2))
 
 const options = {
     headers: {
       'User-Agent': 'MailChimpToZephr Test',
       'Content-Type': 'application/json',
     },
-    hostname: "localhost",  
-    port: 3000,
+    hostname:argv['host'],// 52.44.53.181 localhost
+    port: argv['port'],
     method: 'POST',
     
   }
