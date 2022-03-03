@@ -12,7 +12,7 @@ const port = argv['port'];
 app.all("*", (req, res, next) => {
     console.log(req); // do anything you want here
     next();
-    res.send(200)
+    res.sendStatus(200)
 });
 
 app.listen(port, () => {
