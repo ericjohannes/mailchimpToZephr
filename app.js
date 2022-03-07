@@ -5,13 +5,42 @@
 // node -e "console.log('Running Node.js ' + process.version)"
 // ran `npm install` in my project folder
 
+
+// todo:
+// check for right list id
+
 const express = require('express')
 const dotenv = require('dotenv')
 const CryptoJS = require("crypto-js");
 const https = require('https')
 const fs = require('fs')
-const parseArgs = require('minimist')
+const parseArgs = require('minimist');
+const { groupCollapsed } = require('console');
 const argv = parseArgs(process.argv.slice(2), opts={'boolean': ['dev']})
+
+const buildPathBody = (groupsString)=>{
+  const groups = groupsString.split(",").map(item => item.trim()); // split on , and trim whitespace
+
+  let groupsBody = {};
+  const groupsKey = {
+      "Protocol Alerts": "alerts",
+      Braintrust: "braintrust",
+      China: "china",
+      Climate: "climate",
+      Cloud: "enterprise",
+      Entertainment: "entertainment",
+      FinTech: "fintech",
+      Pipeline: "pipeline",
+      Policy: "policy",
+      "Source Code": "source-code",
+      Workplace: "workplace",
+  }
+  groups.forEach(group=>{
+    let name = groupsKey[group]
+    groupsBody[name] = true;
+  });
+  return groupsBody
+}
 
 class MakeRequest {
   constructor(){
@@ -93,8 +122,8 @@ class MakeRequest {
     }
     const patchPath = `/v3/users/${result.user_id}/attributes`
     const secondResult = await this._makeRequest({path: patchPath, method:'PATCH', body: unsubAll});
-    const thirdResult = await this._makeRequest({path: userPath, method:'GET' });
-    console.log('thirdResult', thirdResult)
+    // const thirdResult = await this._makeRequest({path: userPath, method:'GET' });
+    // console.log('thirdResult', thirdResult)
     return secondResult
   }
 
@@ -219,8 +248,19 @@ app.post('/', (req, res) => {
       res.send('{"result":"unsubscribed"}')
       // res.sendStatus(200);
 
-    } else{
-        res.send('{"result":"not an unsubscribe"}')
+    } else if(req.body.type === "profile"){
+
+      const bodyData = JSON.parse(req.body.data)
+      const result = bodyData.merges.GROUPINGS .filter(group=> group.name == "Protocol Newsletters");
+      if(result.length && result[0].groups){
+        res.send(`{"result":"updating profile", "groups": "${result[0].groups}"}`)
+      }
+      else{
+        sendToSlack(`Received profile update for ${bodyData.email} but 'groups' not found!`)
+      }
+
+    }else{
+        res.send('{"result":"unhandled webhook"}')
     }
   } catch(err){
     sendToSlack(err.stack)
