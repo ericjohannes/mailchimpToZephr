@@ -9,8 +9,8 @@ const express = require('express')
 const dotenv = require('dotenv')
 const parseArgs = require('minimist')
 
-const { simpleCheck, devStuff, sendToSlack } = require('./helpers');
-const { MakeRequest } = require('./makeRequest');
+const { simpleCheck, devStuff, sendToSlack } = require('./code/helpers');
+const { MakeRequest } = require('./code/makeRequest');
 
 const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 
