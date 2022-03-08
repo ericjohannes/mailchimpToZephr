@@ -180,7 +180,9 @@ const devStuff = (req) => {
     //const headers = JSON.stringify(req.headers);
     fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2), 'utf-8');
     // const fileBodyData = JSON.parse(req.body.data);
-    fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(req.body.data, null, 2), 'utf-8');
+    if(req.body && req.body.data){
+        fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(req.body.data, null, 2), 'utf-8');
+    }
 }
 app.use(express.json());
 app.use(express.urlencoded()); // to support URL-encoded bodies
