@@ -89,7 +89,6 @@ class MakeRequest {
                 workplace: false,
             }
             const patchPath = `/v3/users/${result.user_id}/attributes`
-            console.log('unsubscribing', email, result.user_id)
             sendToSlack(`unsubscribing ${email}`)
             const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: unsubAll });
             const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
