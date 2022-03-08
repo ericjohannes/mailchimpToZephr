@@ -18,6 +18,23 @@ const parseArgs = require('minimist');
 const { groupCollapsed } = require('console');
 const argv = parseArgs(process.argv.slice(2), opts={'boolean': ['dev']})
 
+const buildUnsubBody = ()=>{
+  return {
+    policy: false,
+    alerts:false,
+    braintrust:false,
+    china:false,
+    climate:false,
+    enterprise:false,
+    entertainment:false,
+    fintech:false,
+    newsletter:false,
+    pipeline:false,
+    policy:false,
+    "source-code":false,
+    workplace:false,
+  }
+}
 const buildPathBody = (groupsString)=>{
   const groups = groupsString.split(",").map(item => item.trim()); // split on , and trim whitespace
 
@@ -97,31 +114,17 @@ class MakeRequest {
     return options
   }
 
-  makeEmailRequest = async (email)=>{
+  makePatchRequest = async (email, patchBody)=>{
     const emailQuery= `identifiers.email_address=${email}`
     var emailPath = "/v3/users"
 
     const result =  await this._makeRequest({path: emailPath, method:'GET', query: emailQuery})
-    console.log('makeEmailRequest result', result)
+    console.log('makePatchRequest result', result)
     
     const userPath = `/v3/users/${result.user_id}`;
-    const unsubAll = {
-      policy: false,
-      alerts:false,
-      braintrust:false,
-      china:false,
-      climate:false,
-      enterprise:false,
-      entertainment:false,
-      fintech:false,
-      newsletter:false,
-      pipeline:false,
-      policy:false,
-      "source-code":false,
-      workplace:false,
-    }
+
     const patchPath = `/v3/users/${result.user_id}/attributes`
-    const secondResult = await this._makeRequest({path: patchPath, method:'PATCH', body: unsubAll});
+    const secondResult = await this._makeRequest({path: patchPath, method:'PATCH', body: patchBody});
     // const thirdResult = await this._makeRequest({path: userPath, method:'GET' });
     // console.log('thirdResult', thirdResult)
     return secondResult
@@ -236,32 +239,35 @@ app.head('/', (req, res) => { // mailchimp sends a head request to test the endp
 
 app.post('/', (req, res) => {
   try{
+    let message = "unhandled webhook"
     if(argv['dev']){
       devStuff(req)
     }
-    if(req.body.type === "unsubscribe"){   // check if it's an unsubscribe
+    if(req.body.type === "unsubscribe" || req.body.type === "profile"){   // check if it's an unsubscribe
+      const patchBody = {};
       const bodyData = JSON.parse(req.body.data)
       console.log(`Request to unsubscribe ${bodyData.email}`)
+      const patchEmail = bodyData.email;
+      if(req.body.type === "unsubscribe"){
+        patchBody = buildUnsubBody();
+        message = `${patchEmail} unsubscribed`;
+      } else if(req.body.type === "profile" ){
+        
+        const result = bodyData.merges.GROUPINGS .filter(group=> group.name == "Protocol Newsletters");
+        if(result.length && result[0].groups && bodyData.email){
+          patchBody = buildPathBody(result[0].groups)
+          message = `Updating preferences for ${patchEmail}`;
 
-      // start process with zephr to unsubscribe them
-      // const result = makeRequest.makeEmailRequest(req.body.email)
-      res.send('{"result":"unsubscribed"}')
-      // res.sendStatus(200);
-
-    } else if(req.body.type === "profile"){
-
-      const bodyData = JSON.parse(req.body.data)
-      const result = bodyData.merges.GROUPINGS .filter(group=> group.name == "Protocol Newsletters");
-      if(result.length && result[0].groups){
-        res.send(`{"result":"updating profile", "groups": "${result[0].groups}"}`)
+        } else{
+          sendToSlack(`Received profile update for ${bodyData.email} but 'groups' not found!`)
+        }
       }
-      else{
-        sendToSlack(`Received profile update for ${bodyData.email} but 'groups' not found!`)
-      }
 
-    }else{
-        res.send('{"result":"unhandled webhook"}')
+      // start process with zephr to update data
+      const result = makeRequest.makePatchRequest(patchEmail, patchBody)
+
     }
+    res.send(JSON.stringify({"result": message}));
   } catch(err){
     sendToSlack(err.stack)
   }
