@@ -15,6 +15,7 @@ const fs = require('fs')
 const parseArgs = require('minimist')
 const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 
+
 class MakeRequest {
     constructor() {
         this.accessKey = process.env.zephrAccessKey;
@@ -76,28 +77,31 @@ class MakeRequest {
 
         const result = await this._makeRequest({ path: emailPath, method: 'GET', query: emailQuery })
         console.log('makeEmailRequest result', result)
-
-        const userPath = `/v3/users/${result.user_id}`;
-        const unsubAll = {
-            policy: false,
-            alerts: false,
-            braintrust: false,
-            china: false,
-            climate: false,
-            enterprise: false,
-            entertainment: false,
-            fintech: false,
-            newsletter: false,
-            pipeline: false,
-            policy: false,
-            "source-code": false,
-            workplace: false,
+            if(result.user_id){
+            const userPath = `/v3/users/${result.user_id}`;
+            const unsubAll = {
+                policy: false,
+                alerts: false,
+                braintrust: false,
+                china: false,
+                climate: false,
+                enterprise: false,
+                entertainment: false,
+                fintech: false,
+                newsletter: false,
+                pipeline: false,
+                policy: false,
+                "source-code": false,
+                workplace: false,
+            }
+            const patchPath = `/v3/users/${result.user_id}/attributes`
+            const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: unsubAll });
+            const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
+            console.log('thirdResult', thirdResult)
+            return secondResult
+        } else{
+            sendToSlack(f`NO user foudn in Zephr with email ${email}`)
         }
-        const patchPath = `/v3/users/${result.user_id}/attributes`
-        const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: unsubAll });
-        const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
-        console.log('thirdResult', thirdResult)
-        return secondResult
     }
 
     _makeRequest = (data) => {
@@ -185,7 +189,7 @@ const devStuff = (req) => {
     }
 }
 app.use(express.json());
-app.use(express.urlencoded()); // to support URL-encoded bodies
+app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
 
 app.get('/', (req, res) => {
     try {
@@ -216,8 +220,9 @@ app.post('/', (req, res) => {
         }
         if (req.body.type === "unsubscribe") {   // check if it's an unsubscribe
 
-            const bodyData = JSON.parse(req.body.data)
-            console.log(`Request to unsubscribe ${bodyData.email}`)
+            // const bodyData = JSON.parse(req.body.data)
+
+            console.log(`Request to unsubscribe ${req.body.data.email}`)
 
             // start process with zephr to unsubscribe them
             // const result = makeRequest.makeEmailRequest(req.body.email)
@@ -234,7 +239,7 @@ app.post('/', (req, res) => {
 
 app.listen(port, () => {
     try {
-        console.log(`Example app listening at http://localhost:${port}`)
+        console.log(`Listening at http://localhost:${port}`)
     } catch (err) {
         sendToSlack(err.stack)
     }
