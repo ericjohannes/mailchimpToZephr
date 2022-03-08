@@ -215,6 +215,7 @@ app.post('/', (req, res) => {
         if (req.body.type === "unsubscribe") {   // check if it's an unsubscribe
 
             const bodyData = JSON.parse(req.body.data)
+            
             console.log(`Request to unsubscribe ${bodyData.email}`)
 
             // start process with zephr to unsubscribe them
