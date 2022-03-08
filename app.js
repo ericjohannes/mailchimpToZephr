@@ -48,13 +48,7 @@ class MakeRequest {
             .finalize()
             .toString()
 
-        console.log('path', path)
-        console.log('method', method)
-        console.log('query', query)
-        console.log('body', body)
-
         const hmac = `ZEPHR-HMAC-SHA256 ${this.accessKey}:${timestamp}:${nonce}:${hashString}`.replace(/\r?\n|\r/, "");
-        console.log('hmac', hmac)
         return hmac
     }
 
@@ -76,8 +70,7 @@ class MakeRequest {
         var emailPath = "/v3/users"
 
         const result = await this._makeRequest({ path: emailPath, method: 'GET', query: emailQuery })
-        console.log('makeEmailRequest result', result)
-            if(result.user_id){
+        if(result.user_id){
             const userPath = `/v3/users/${result.user_id}`;
             const unsubAll = {
                 policy: false,
@@ -95,12 +88,13 @@ class MakeRequest {
                 workplace: false,
             }
             const patchPath = `/v3/users/${result.user_id}/attributes`
+            console.log('unsubscribing', email, result.user_id)
+            sendToSlack(`unsubscribing ${email}`)
             const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: unsubAll });
             const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
-            console.log('thirdResult', thirdResult)
             return secondResult
         } else{
-            sendToSlack(f`NO user foudn in Zephr with email ${email}`)
+            sendToSlack(f`No user found in Zephr with email ${email}`)
         }
     }
 
@@ -165,7 +159,6 @@ const sendToSlack = (msg) => {
         });
         res.on('end', () => {
             return
-            // console.log('end', JSON.parse(responseBody));
         });
     })
     req.on('error', (err) => {
@@ -220,14 +213,9 @@ app.post('/', (req, res) => {
         }
         if (req.body.type === "unsubscribe") {   // check if it's an unsubscribe
 
-            // const bodyData = JSON.parse(req.body.data)
-
-            console.log(`Request to unsubscribe ${req.body.data.email}`)
-
             // start process with zephr to unsubscribe them
-            // const result = makeRequest.makeEmailRequest(req.body.email)
+            const result = makeRequest.makeEmailRequest(req.body.data.email)
             res.send('{"result":"unsubscribed"}')
-            // res.sendStatus(200);
 
         } else {
             res.send('{"result":"not an unsubscribe"}')
