@@ -15,7 +15,8 @@ const fs = require('fs')
 const parseArgs = require('minimist')
 const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 
-
+const helpers = require('./helpers');
+console.log(helpers)
 class MakeRequest {
     constructor() {
         this.accessKey = process.env.zephrAccessKey;

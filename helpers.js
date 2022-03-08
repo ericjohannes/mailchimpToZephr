@@ -8,4 +8,4 @@ const simpleCheck = (headers, body)=>{
     return (body.data.list_id === listId &&  userAgents.includes(headers["user-agent"]) )
 }
 
-export { simpleCheck }
+module.exports = { simpleCheck };
