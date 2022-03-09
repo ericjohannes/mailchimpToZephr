@@ -4,10 +4,13 @@ const dotenv = require('dotenv');
 const fs = require("fs");
 const https = require("https");
 
-const { buildPatchBody, policySyncWrapper }= require('./code/helpers');
-const { MakeRequest } = require('./code/makeRequest');
+const { buildPatchBody, policySyncWrapper }= require('../code/helpers');
+const { MakeRequest } = require('../code/makeRequest');
+
+const makeRequest = new MakeRequest();
 
 const fn = "./data/members_Policy_Email_Sub_Confirm_click_activity_Mar_7_2022.csv"
+const failed_fn = "./data/failedToUpdataePolicy.txt"
 // read in csv
 const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
     if (err) {
@@ -17,12 +20,28 @@ const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
     return data
 });
 
+const recordFailure = (msg)=>{
+    const data = `${msg}\n`
+    // make a note of emails for accounts we fail to update
+    fs.appendFile(failed_fn, data, 'utf8', (err)=> {
+        if (err) throw err;
+      }); 
+}
 
-const handleRow = (row)=>{
+
+const handleRow = async (row)=>{
     if(row.data["Protocol Newsletters"] && row.data["Protocol Newsletters"].includes('Policy')){
-        const newsletters = buildPatchBody(row.data["Protocol Newsletters"])
-        const policySub = policySyncWrapper(row.data["Protocol Newsletters"])
-        console.log(row.data["Email Address"], newsletters, policySub);
+        const policySubBody = policySyncWrapper(row.data["Protocol Newsletters"])
+       
+        // const result = await makeRequest.makePatchRequest(row.data["Email Address"], policySubBody)
+        const result = await makeRequest.makeEmailRequest(row.data["Email Address"])
+        
+        if(result.user_id){
+            console.log('success!')
+        }else{
+            recordFailure(`could not find in Zephr: ${row.data["Email Address"]}`)
+        }
+        
     }
 }
 // Stream big file in worker thread

@@ -66,7 +66,13 @@ class MakeRequest {
             return secondResult
         } else{
             sendToSlack(f`No user found in Zephr with email ${email}`)
+            return null
         }
+    }
+    makeEmailRequest = async (email) => {
+        const emailQuery = `identifiers.email_address=${email}`
+        var emailPath = "/v3/users"
+        return await this._makeRequest({ path: emailPath, method: 'GET', query: emailQuery })
     }
 
     _makeRequest = (data) => {
