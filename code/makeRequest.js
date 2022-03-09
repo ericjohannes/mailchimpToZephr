@@ -65,7 +65,7 @@ class MakeRequest {
             // const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
             return secondResult
         } else{
-            sendToSlack(f`No user found in Zephr with email ${email}`)
+            sendToSlack(`No user found in Zephr with email ${email}`)
             return null
         }
     }
@@ -93,7 +93,15 @@ class MakeRequest {
                     responseBody += chunk;
                 });
                 res.on('end', () => {
-                    resolve(JSON.parse(responseBody));
+                    // todo: make try except here
+                    try{
+                        resolve(JSON.parse(responseBody));
+                    } catch(error){
+                        console.log(error)
+                        console.log(responseBody)
+                        console.log(options)
+                    }
+                    
                 });
             })
             req.on('error', (err) => {
