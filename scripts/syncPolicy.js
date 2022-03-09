@@ -10,7 +10,8 @@ const { MakeRequest } = require('../code/makeRequest');
 const makeRequest = new MakeRequest();
 
 const fn = "./data/members_Policy_Email_Sub_Confirm_click_activity_Mar_7_2022.csv"
-const failed_fn = "./data/failedToUpdataePolicy.txt"
+// const fn = "./data/testPolicy.csv";
+const failed_fn = "./data/failedToUpdataePolicy.txt";
 // read in csv
 const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
     if (err) {
@@ -32,13 +33,12 @@ const recordFailure = (msg)=>{
 const handleRow = async (row)=>{
     if(row.data["Protocol Newsletters"] && row.data["Protocol Newsletters"].includes('Policy')){
         const policySubBody = policySyncWrapper(row.data["Protocol Newsletters"])
-       
-        // const result = await makeRequest.makePatchRequest(row.data["Email Address"], policySubBody)
-        const result = await makeRequest.makeEmailRequest(row.data["Email Address"])
-        
-        if(result.user_id){
+        // update zephr
+        const result = await makeRequest.makePatchRequest(row.data["Email Address"], policySubBody)
+
+        if(result && result.message){
             console.log('success!')
-        }else{
+        } else {
             recordFailure(`could not find in Zephr: ${row.data["Email Address"]}`)
         }
         
