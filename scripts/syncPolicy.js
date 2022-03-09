@@ -9,8 +9,8 @@ const { MakeRequest } = require('../code/makeRequest');
 
 const makeRequest = new MakeRequest();
 
-// const fn = "./data/members_Policy_Email_Sub_Confirm_click_activity_Mar_7_2022.csv"
-const fn = "./data/testPolicy.csv";
+const fn = "./data/members_Policy_Email_Sub_Confirm_click_activity_Mar_7_2022.csv"
+// const fn = "./data/testPolicy.csv";
 const failed_fn = "./data/failedToUpdataePolicy.txt";
 // read in csv
 const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
