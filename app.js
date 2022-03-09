@@ -11,6 +11,7 @@
 
 const express = require('express')
 const dotenv = require('dotenv')
+<<<<<<< HEAD
 const CryptoJS = require("crypto-js");
 const https = require('https')
 const fs = require('fs')
@@ -161,7 +162,14 @@ class MakeRequest {
     });
   }
 }
+=======
+const parseArgs = require('minimist')
 
+const { simpleCheck, devStuff, sendToSlack } = require('./code/helpers');
+const { MakeRequest } = require('./code/makeRequest');
+>>>>>>> master
+
+const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 
 dotenv.config();
 
@@ -170,71 +178,29 @@ const port = argv['port'];
 
 const makeRequest = new MakeRequest();
 
-const sendToSlack = (msg) =>{
-  const slackToken = process.env.slackToken
-  const req = https.request({
-    headers: {
-      'User-Agent': 'MailChimpToZephr Test',
-      'Content-Type': 'application/json',
-      authorization: `Bearer ${slackToken}`
-    },
-    hostname: "slack.com", 
-    path: "/api/chat.postMessage",
-    method: 'POST',
-    
-  }, res => {
-      res.setEncoding('utf8');
-      let responseBody = '';
-
-      res.on('data', (chunk) => {
-        responseBody += chunk;
-      });
-      res.on('end', () => {
-        return
-        // console.log('end', JSON.parse(responseBody));
-      });      
-  })
-  req.on('error', (err) => {
-    console.log('err', (err));
-  });
-  req.write(JSON.stringify({
-    channel: '#mailchimp-zephr-app',
-    text: msg,
-  }));
-  req.end();
-}
-
-const devStuff = (req) =>{
-  // for dev purposes...
-  const timeStamp = + new Date();
-  //const headers = JSON.stringify(req.headers);
-  fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2) , 'utf-8');
-  const fileBodyData = JSON.parse(req.body.data);
-  fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(fileBodyData, null, 2) , 'utf-8');
-}
 app.use(express.json());
-app.use(express.urlencoded()); // to support URL-encoded bodies
+app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
 
 app.get('/', (req, res) => {
-  try{
-    if(argv['dev']){
-      devStuff(req)
+    try {
+        if (argv['dev']) {
+            devStuff(req)
+        }
+        res.sendFile(__dirname + '/index.html');
+    } catch (err) {
+        sendToSlack(err.stack)
     }
-    res.sendFile(__dirname + '/index.html');
-  } catch(err){
-    sendToSlack(err.stack)
-  }
 });
 
 app.head('/', (req, res) => { // mailchimp sends a head request to test the endpoint
-  try{
-    if(argv['dev']){
-      devStuff(req)
+    try {
+        if (argv['dev']) {
+            devStuff(req)
+        }
+        res.sendStatus(200);
+    } catch (err) {
+        sendToSlack(err.stack)
     }
-    res.sendStatus(200);
-  } catch(err){
-    sendToSlack(err.stack)
-  }
 });
 
 app.post('/', (req, res) => {
@@ -243,20 +209,20 @@ app.post('/', (req, res) => {
     if(argv['dev']){
       devStuff(req)
     }
-    if(req.body.type === "unsubscribe" || req.body.type === "profile"){   // check if it's an unsubscribe
+    if( (req.body.type === "unsubscribe" || req.body.type === "profile") && simpleCheck(req)){   // check if it's an unsubscribe
       const patchBody = {};
       const bodyData = JSON.parse(req.body.data)
       console.log(`Request to unsubscribe ${bodyData.email}`)
-      const patchEmail = bodyData.email;
+
       if(req.body.type === "unsubscribe"){
         patchBody = buildUnsubBody();
-        message = `${patchEmail} unsubscribed`;
+        message = `${req.body.data.email} unsubscribed`;
       } else if(req.body.type === "profile" ){
         
         const result = bodyData.merges.GROUPINGS .filter(group=> group.name == "Protocol Newsletters");
         if(result.length && result[0].groups && bodyData.email){
           patchBody = buildPathBody(result[0].groups)
-          message = `Updating preferences for ${patchEmail}`;
+          message = `Updating preferences for ${req.body.data.email}`;
 
         } else{
           sendToSlack(`Received profile update for ${bodyData.email} but 'groups' not found!`)
@@ -264,7 +230,7 @@ app.post('/', (req, res) => {
       }
 
       // start process with zephr to update data
-      const result = makeRequest.makePatchRequest(patchEmail, patchBody)
+      const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
 
     }
     res.send(JSON.stringify({"result": message}));
@@ -274,9 +240,9 @@ app.post('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  try{
-    console.log(`Example app listening at http://localhost:${port}`)
-  } catch(err){
-    sendToSlack(err.stack)
-  }
+    try {
+        console.log(`Listening at http://localhost:${port}`)
+    } catch (err) {
+        sendToSlack(err.stack)
+    }
 })
