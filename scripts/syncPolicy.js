@@ -4,6 +4,9 @@ const dotenv = require('dotenv');
 const fs = require("fs");
 const https = require("https");
 
+const { buildPatchBody, policySyncWrapper }= require('./code/helpers');
+const { MakeRequest } = require('./code/makeRequest');
+
 const fn = "./data/members_Policy_Email_Sub_Confirm_click_activity_Mar_7_2022.csv"
 // read in csv
 const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
@@ -14,17 +17,19 @@ const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {
     return data
 });
 
+
+const handleRow = (row)=>{
+    if(row.data["Protocol Newsletters"] && row.data["Protocol Newsletters"].includes('Policy')){
+        const newsletters = buildPatchBody(row.data["Protocol Newsletters"])
+        const policySub = policySyncWrapper(row.data["Protocol Newsletters"])
+        console.log(row.data["Email Address"], newsletters, policySub);
+    }
+}
 // Stream big file in worker thread
 Papa.parse(fileData, {
 	worker: true,
     header: true,
-	step: function(results) {
-        // if Policy is in 'Protocol Newsletters'
-        if(results.data["Protocol Newsletters"] && results.data["Protocol Newsletters"].includes('Policy')){
-            console.log("Row:", results.data["Email Address"], results.data["Protocol Newsletters"]);
-
-        }
-	}
+	step: handleRow
 });
 
 // make patch request where Policy: true

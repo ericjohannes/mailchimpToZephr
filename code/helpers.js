@@ -94,4 +94,24 @@ const buildPatchBody = (groupsString) => {
     return groupsBody
 }
 
-module.exports = { simpleCheck, devStuff, sendToSlack, buildUnsubBody, buildPatchBody: buildPatchBody };
+const policySyncWrapper = (groupsString)=>{
+    // builds a patch body for the policy sync script (syncPolicy.js)
+    // should  return only {Policy: true} rather than all the newsletters they are subbed to 
+    // and only if they are subbed to Policy in mailchimp
+    // Doing that to only touch the Policy stuff rather than all their subscriptions
+    const newsletters = buildPatchBody(groupsString);
+    if(newsletters.policy){
+        return({policy: true})
+    } else{
+        return false
+    }
+}
+
+module.exports = { 
+    simpleCheck, 
+    devStuff, 
+    sendToSlack, 
+    buildUnsubBody, 
+    buildPatchBody,
+    policySyncWrapper
+};
