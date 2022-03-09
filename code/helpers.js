@@ -4,10 +4,10 @@ const https = require('https');
 
 dotenv.config();
 
-const simpleCheck = (req)=>{
+const simpleCheck = (req) => {
     const listId = process.env.listId;
     const userAgents = ['MailChimp', 'MailChimp.com WebHook Validator', 'MailChimpToZephr Test']
-    return (req.body.data.list_id === listId && userAgents.includes(req.headers["user-agent"]) )
+    return (req.body.data.list_id === listId && userAgents.includes(req.headers["user-agent"]))
 }
 
 const devStuff = (req) => {
@@ -16,7 +16,7 @@ const devStuff = (req) => {
     //const headers = JSON.stringify(req.headers);
     fs.writeFileSync(`./data/${timeStamp}_headers.json`, JSON.stringify(req.headers, null, 2), 'utf-8');
     // const fileBodyData = JSON.parse(req.body.data);
-    if(req.body){
+    if (req.body) {
         fs.writeFileSync(`./data/${timeStamp}_fileBodyData.json`, JSON.stringify(req.body, null, 2), 'utf-8');
     }
 }
@@ -53,4 +53,45 @@ const sendToSlack = (msg) => {
     req.end();
 }
 
-module.exports = { simpleCheck, devStuff, sendToSlack};
+const buildUnsubBody = () => {
+    return {
+        policy: false,
+        alerts: false,
+        braintrust: false,
+        china: false,
+        climate: false,
+        enterprise: false,
+        entertainment: false,
+        fintech: false,
+        newsletter: false,
+        pipeline: false,
+        policy: false,
+        "source-code": false,
+        workplace: false,
+    }
+}
+const buildPatchBody = (groupsString) => {
+    const groups = groupsString.split(",").map(item => item.trim()); // split on , and trim whitespace
+
+    let groupsBody = {};
+    const groupsKey = {
+        "Protocol Alerts": "alerts",
+        Braintrust: "braintrust",
+        China: "china",
+        Climate: "climate",
+        Cloud: "enterprise",
+        Entertainment: "entertainment",
+        FinTech: "fintech",
+        Pipeline: "pipeline",
+        Policy: "policy",
+        "Source Code": "source-code",
+        Workplace: "workplace",
+    }
+    groups.forEach(group => {
+        let name = groupsKey[group]
+        groupsBody[name] = true;
+    });
+    return groupsBody
+}
+
+module.exports = { simpleCheck, devStuff, sendToSlack, buildUnsubBody, buildPatchBody: buildPatchBody };

@@ -52,32 +52,17 @@ class MakeRequest {
         return options
     }
 
-    makeEmailRequest = async (email) => {
+    makePatchRequest = async (email, patchBody) => {
         const emailQuery = `identifiers.email_address=${email}`
         var emailPath = "/v3/users"
 
         const result = await this._makeRequest({ path: emailPath, method: 'GET', query: emailQuery })
         if(result.user_id){
             const userPath = `/v3/users/${result.user_id}`;
-            const unsubAll = {
-                policy: false,
-                alerts: false,
-                braintrust: false,
-                china: false,
-                climate: false,
-                enterprise: false,
-                entertainment: false,
-                fintech: false,
-                newsletter: false,
-                pipeline: false,
-                policy: false,
-                "source-code": false,
-                workplace: false,
-            }
+            
             const patchPath = `/v3/users/${result.user_id}/attributes`
-            sendToSlack(`unsubscribing ${email}`)
-            const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: unsubAll });
-            const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
+            const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: patchBody });
+            // const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
             return secondResult
         } else{
             sendToSlack(f`No user found in Zephr with email ${email}`)
