@@ -6,6 +6,10 @@ const http = require('http')
 const parseArgs = require('minimist')
 const argv = parseArgs(process.argv.slice(2))
 
+
+const dotenv = require('dotenv');
+dotenv.config();
+
 const options = {
     headers: {
         'User-Agent': 'MailChimpToZephr Test',
@@ -14,6 +18,7 @@ const options = {
     hostname: argv['host'],// 52.44.53.181 or localhost
     port: argv['port'],
     method: 'POST',
+    path: `/${process.env.route}`,
 }
 const bodyData = {
     'unsubscribe': JSON.stringify({
@@ -36,7 +41,7 @@ const req = http.request(options, res => {
         responseBody += chunk;
     });
     res.on('end', () => {
-        console.log('end', JSON.parse(responseBody));
+        console.log(JSON.parse(responseBody));
     });
 })
 req.on('error', (err) => {

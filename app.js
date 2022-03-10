@@ -22,13 +22,14 @@ dotenv.config();
 
 const app = express();
 const port = argv['port'];
+const route = `/${process.env.route}`;
 
 const makeRequest = new MakeRequest();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
 
-app.get('/', (req, res) => {
+app.get(route, (req, res) => {
     try {
         if (argv['dev']) {
             devStuff(req)
@@ -39,7 +40,7 @@ app.get('/', (req, res) => {
     }
 });
 
-app.head('/', (req, res) => { // mailchimp sends a head request to test the endpoint
+app.head(route, (req, res) => { // mailchimp sends a head request to test the endpoint
     try {
         if (argv['dev']) {
             devStuff(req)
@@ -50,7 +51,7 @@ app.head('/', (req, res) => { // mailchimp sends a head request to test the endp
     }
 });
 
-app.post('/', (req, res) => {
+app.post(route, (req, res) => {
     try {
         let message = "unhandled webhook"
         if (argv['dev']) {
