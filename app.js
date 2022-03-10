@@ -29,23 +29,29 @@ const makeRequest = new MakeRequest();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
 
-app.get(route, (req, res) => {
-    try {
-        if (argv['dev']) {
-            devStuff(req)
-        }
-        res.sendFile(__dirname + '/index.html');
-    } catch (err) {
-        sendToSlack(err.stack)
-    }
-});
+// Don't provide get route??? 
+// app.get(route, (req, res) => {
+//     try {
+//         if (argv['dev']) {
+//             devStuff(req)
+//         }
+//         res.sendFile(__dirname + '/index.html');
+//     } catch (err) {
+//         sendToSlack(err.stack)
+//     }
+// });
 
 app.head(route, (req, res) => { // mailchimp sends a head request to test the endpoint
     try {
-        if (argv['dev']) {
-            devStuff(req)
+        if(userAgentCheck(req)){
+            if (argv['dev']) {
+                devStuff(req)
+            }
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(403)
         }
-        res.sendStatus(200);
+        
     } catch (err) {
         sendToSlack(err.stack)
     }
@@ -53,35 +59,40 @@ app.head(route, (req, res) => { // mailchimp sends a head request to test the en
 
 app.post(route, (req, res) => {
     try {
-        let message = "unhandled webhook"
-        if (argv['dev']) {
-            devStuff(req)
-        }
-        if ((req.body.type === "unsubscribe" || req.body.type === "profile") && simpleCheck(req)) {   // check if it's an unsubscribe
-            let patchBody = {};
-            console.log(`Request to unsubscribe ${req.body.data.email}`)
-
-            if (req.body.type === "unsubscribe") {
-                patchBody = buildUnsubBody();
-                message = `${req.body.data.email} unsubscribed`;
-            } else if (req.body.type === "profile") {
-
-                const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
-                if (newsletters.length && newsletters[0].groups && req.body.data.email) {
-                    patchBody = buildPatchBody(newsletters[0].groups)
-                    message = `Updating preferences for ${req.body.data.email}`;
-
-                } else {
-                    message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
-                }
+        if(simpleCheck(req)){ // check basic stuff
+            let message = "unhandled webhook"
+            if (argv['dev']) {
+                devStuff(req)
             }
-
-            // start process with zephr to update data
-            const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
-
+            if ((req.body.type === "unsubscribe" || req.body.type === "profile")) {   // check if it's an unsubscribe
+                let patchBody = {};
+                console.log(`Request to unsubscribe ${req.body.data.email}`)
+    
+                if (req.body.type === "unsubscribe") {
+                    patchBody = buildUnsubBody();
+                    message = `${req.body.data.email} unsubscribed`;
+                } else if (req.body.type === "profile") {
+    
+                    const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
+                    if (newsletters.length && newsletters[0].groups && req.body.data.email) {
+                        patchBody = buildPatchBody(newsletters[0].groups)
+                        message = `Updating preferences for ${req.body.data.email}`;
+    
+                    } else {
+                        message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
+                    }
+                }
+    
+                // start process with zephr to update data
+                const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
+    
+            }
+            res.json({ "result": message });
+            sendToSlack(message)
+        } else{
+            res.sendStatus(403)
         }
-        res.send(JSON.stringify({ "result": message }));
-        sendToSlack(message)
+        
     } catch (err) {
         sendToSlack(err.stack)
     }
