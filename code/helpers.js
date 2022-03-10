@@ -91,6 +91,12 @@ const buildPatchBody = (groupsString) => {
         let name = groupsKey[group]
         groupsBody[name] = true;
     });
+
+    // if the user is subbing to any newsletters (ie has any key in groups and the value for the key is true)
+    if(Object.keys(groupsBody).length && groupsBody[Object.keys(groupsBody)[0]]){
+        // make sure zephr knows they are a nl subscriber
+        groupsBody['newsletter'] = true
+    }
     return groupsBody
 }
 

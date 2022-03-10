@@ -57,22 +57,21 @@ app.post('/', (req, res) => {
             devStuff(req)
         }
         if ((req.body.type === "unsubscribe" || req.body.type === "profile") && simpleCheck(req)) {   // check if it's an unsubscribe
-            const patchBody = {};
-            const bodyData = JSON.parse(req.body.data)
-            console.log(`Request to unsubscribe ${bodyData.email}`)
+            let patchBody = {};
+            console.log(`Request to unsubscribe ${req.body.data.email}`)
 
             if (req.body.type === "unsubscribe") {
                 patchBody = buildUnsubBody();
                 message = `${req.body.data.email} unsubscribed`;
             } else if (req.body.type === "profile") {
 
-                const result = bodyData.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
-                if (result.length && result[0].groups && bodyData.email) {
-                    patchBody = buildPatchBody(result[0].groups)
+                const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
+                if (newsletters.length && newsletters[0].groups && req.body.data.email) {
+                    patchBody = buildPatchBody(newsletters[0].groups)
                     message = `Updating preferences for ${req.body.data.email}`;
 
                 } else {
-                    message = `Received profile update for ${bodyData.email} but 'groups' not found!`
+                    message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
                 }
             }
 
