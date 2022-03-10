@@ -5,11 +5,15 @@
 // node -e "console.log('Running Node.js ' + process.version)"
 // ran `npm install` in my project folder
 
+
+// todo:
+// check for right list id
+
 const express = require('express')
 const dotenv = require('dotenv')
 const parseArgs = require('minimist')
 
-const { simpleCheck, devStuff, sendToSlack } = require('./code/helpers');
+const { simpleCheck, devStuff, sendToSlack, buildUnsubBody, buildPatchBody }= require('./code/helpers');
 const { MakeRequest } = require('./code/makeRequest');
 
 const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
@@ -48,17 +52,35 @@ app.head('/', (req, res) => { // mailchimp sends a head request to test the endp
 
 app.post('/', (req, res) => {
     try {
+        let message = "unhandled webhook"
         if (argv['dev']) {
             devStuff(req)
         }
-        if (req.body.type === "unsubscribe" && simpleCheck(req)) {   // check if it's an unsubscribe and if it's valid
-            // start process with zephr to unsubscribe them
-            const result = makeRequest.makeEmailRequest(req.body.data.email)
-            res.send('{"result":"unsubscribed"}')
+        if ((req.body.type === "unsubscribe" || req.body.type === "profile") && simpleCheck(req)) {   // check if it's an unsubscribe
+            let patchBody = {};
+            console.log(`Request to unsubscribe ${req.body.data.email}`)
 
-        } else {
-            res.send('{"result":"not an unsubscribe"}')
+            if (req.body.type === "unsubscribe") {
+                patchBody = buildUnsubBody();
+                message = `${req.body.data.email} unsubscribed`;
+            } else if (req.body.type === "profile") {
+
+                const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
+                if (newsletters.length && newsletters[0].groups && req.body.data.email) {
+                    patchBody = buildPatchBody(newsletters[0].groups)
+                    message = `Updating preferences for ${req.body.data.email}`;
+
+                } else {
+                    message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
+                }
+            }
+
+            // start process with zephr to update data
+            const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
+
         }
+        res.send(JSON.stringify({ "result": message }));
+        sendToSlack(message)
     } catch (err) {
         sendToSlack(err.stack)
     }
