@@ -12,6 +12,7 @@
 const express = require('express')
 const dotenv = require('dotenv')
 const parseArgs = require('minimist')
+const { isEmail } = require('validator');
 
 const { simpleCheck, devStuff, sendToSlack, buildUnsubBody, buildPatchBody }= require('./code/helpers');
 const { MakeRequest } = require('./code/makeRequest');
@@ -53,47 +54,59 @@ app.head(route, (req, res) => { // mailchimp sends a head request to test the en
         }
         
     } catch (err) {
+        res.sendStatus(500)
         sendToSlack(err.stack)
     }
 });
 
-app.post(route, (req, res) => {
+app.post(route + 'unsubscribe', (req, res) => {
+    try {            
+        let message = "unhandled webhook"
+        if(simpleCheck(req) && req.body.type === "unsubscribe" && isEmail(req.body.data.email)){ // check basic stuff and if it's unsub
+            if (argv['dev']) { // save data to disk if in dev
+                devStuff(req)
+            }
+            let patchBody = {};
+            console.log(`Request to unsubscribe ${req.body.data.email}`)
+            patchBody = buildUnsubBody();
+            message = `${req.body.data.email} unsubscribed`;    
+            // start process with zephr to update data
+            const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
+            res.sendStatus(200).json({ "result": message });
+        } else{
+            res.sendStatus(403)
+        }
+        sendToSlack(message)
+    } catch (err) {
+        res.sendStatus(500)
+        sendToSlack(err.stack)
+    }
+});
+
+app.post(route + 'profile', (req, res) => {
     try {
-        if(simpleCheck(req)){ // check basic stuff
+        if(simpleCheck(req) &&  req.body.type === "profile" && isEmail(req.body.data.email)){ // check basic stuff
             let message = "unhandled webhook"
             if (argv['dev']) {
                 devStuff(req)
             }
-            if ((req.body.type === "unsubscribe" || req.body.type === "profile")) {   // check if it's an unsubscribe
-                let patchBody = {};
-                console.log(`Request to unsubscribe ${req.body.data.email}`)
-    
-                if (req.body.type === "unsubscribe") {
-                    patchBody = buildUnsubBody();
-                    message = `${req.body.data.email} unsubscribed`;
-                } else if (req.body.type === "profile") {
-    
-                    const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
-                    if (newsletters.length && newsletters[0].groups && req.body.data.email) {
-                        patchBody = buildPatchBody(newsletters[0].groups)
-                        message = `Updating preferences for ${req.body.data.email}`;
-    
-                    } else {
-                        message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
-                    }
-                }
-    
-                // start process with zephr to update data
+            let patchBody = {};
+            const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
+            if (newsletters.length && newsletters[0].groups && req.body.data.email) {
+                patchBody = buildPatchBody(newsletters[0].groups)
+                message = `Updating preferences for ${req.body.data.email}`;
+                // update data in zephr        
                 const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
-    
-            }
-            res.json({ "result": message });
+                res.sendStatus(200).json({ "result": message });
+            } else {
+                message = `Received profile update for ${req.body.data.email} but 'groups' not found!`
+            }    
             sendToSlack(message)
-        } else{
-            res.sendStatus(403)
-        }
+        } 
+        res.sendStatus(403)
         
     } catch (err) {
+        res.sendStatus(500)
         sendToSlack(err.stack)
     }
 });
