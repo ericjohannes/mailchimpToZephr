@@ -45,7 +45,7 @@ router.post(route + 'profile', (req, res) => {
             }
             let patchBody = {};
             const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
-            if (newsletters.length && newsletters[0].groups) {
+            if (newsletters.length && newsletters[0].groups && typeof newsletters[0].groups === 'string') {
                 patchBody = buildPatchBody(newsletters[0].groups)
                 message = `Updating preferences for ${req.body.data.email}`;
                 // update data in zephr        
