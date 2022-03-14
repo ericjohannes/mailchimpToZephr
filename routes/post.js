@@ -14,6 +14,7 @@ const route = `/${process.env.route}`;
 
 router.post(route + 'unsubscribe', (req, res) => {
     try {            
+        console.log('incoming')
         let message = "unhandled webhook"
         if(simpleCheck(req) && req.body.type === "unsubscribe" && isEmail(req.body.data.email)){ // check basic stuff and if it's unsub
             if (argv['dev']) { // save data to disk if in dev

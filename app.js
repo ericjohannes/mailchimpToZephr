@@ -9,15 +9,18 @@
 // todo:
 // check for right list id
 
-const express = require('express')
-const dotenv = require('dotenv')
-const parseArgs = require('minimist')
+const express = require('express');
+const https = require("https");
+const dotenv = require('dotenv');
+const parseArgs = require('minimist');
+const fs = require('fs');
+
 
 const { sendToSlack }= require('./code/helpers');
 const postRoutes = require('./routes/post');
-const headRoutes = require('./routes/head')
+const headRoutes = require('./routes/head');
 
-const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
+const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] });
 
 dotenv.config();
 
@@ -27,13 +30,21 @@ const port = argv['port'];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
-app.use(postRoutes)
-app.use(headRoutes)
+app.use(postRoutes);
+app.use(headRoutes);
 
-app.listen(port, () => {
+
+const options = {
+    key: fs.readFileSync('certs/key.pem'),
+    cert: fs.readFileSync('certs/cert.pem')
+};
+
+https
+  .createServer(options, app)
+  .listen(port, ()=>{
     try {
-        console.log(`Listening at http://localhost:${port}`)
+        console.log(`Listening at https://localhost:${port}`)
     } catch (err) {
         sendToSlack(err.stack)
     }
-})
+});

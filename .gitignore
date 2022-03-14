@@ -6,3 +6,5 @@ data/*.json
 data/*.csv
 data/*
 *.json
+certs/*.pem
+certs/*.certs

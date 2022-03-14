@@ -1,7 +1,7 @@
 // runs with command line arguments --port for port to connect to, --host for hostname to connect to, --type for type of webhook to send, 'profile' or 'unsubscribe'
 // use like `node testListener.js --port=3000 --host=localhost`
 
-const http = require('http')
+const https = require('https')
 
 const parseArgs = require('minimist')
 const argv = parseArgs(process.argv.slice(2))
@@ -35,7 +35,7 @@ const options = {
     path: `/${process.env.route}${argv['type']}`,
 }
 
-const req = http.request(options, res => {
+const req = https.request(options, res => {
     res.setEncoding('utf8');
     let responseBody = '';
 
