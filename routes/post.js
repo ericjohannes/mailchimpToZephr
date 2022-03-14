@@ -11,10 +11,9 @@ const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 const makeRequest = new MakeRequest();
 dotenv.config();
 const route = `/${process.env.route}`;
-
+const uniqueId = process.env.uniqueId;
 router.post(route + 'unsubscribe', (req, res) => {
     try {            
-        console.log('incoming')
         let message = "unhandled webhook"
         if(simpleCheck(req) && req.body.type === "unsubscribe" && isEmail(req.body.data.email)){ // check basic stuff and if it's unsub
             if (argv['dev']) { // save data to disk if in dev
@@ -45,7 +44,7 @@ router.post(route + 'profile', (req, res) => {
                 devStuff(req)
             }
             let patchBody = {};
-            const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.name == "Protocol Newsletters");
+            const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.unique_id == uniqueId); // unique_id is a hashed id specific to the protocol newsletters audience. It comes from .env
             if (newsletters.length && newsletters[0].groups && typeof newsletters[0].groups === 'string') {
                 patchBody = buildPatchBody(newsletters[0].groups)
                 message = `Updating preferences for ${req.body.data.email}`;

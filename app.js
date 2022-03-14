@@ -6,9 +6,6 @@
 // ran `npm install` in my project folder
 
 
-// todo:
-// check for right list id
-
 const express = require('express');
 const https = require("https");
 const dotenv = require('dotenv');
@@ -32,7 +29,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
 app.use(postRoutes);
 app.use(headRoutes);
-
 
 const options = {
     key: fs.readFileSync('certs/key.pem'),
