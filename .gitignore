@@ -8,3 +8,4 @@ data/*
 *.json
 certs/*.pem
 certs/*.certs
+*.log

@@ -5,13 +5,15 @@
 // node -e "console.log('Running Node.js ' + process.version)"
 // ran `npm install` in my project folder
 
+// todo:
+// add pm2
+// add certs path for prod
 
 const express = require('express');
 const https = require("https");
 const dotenv = require('dotenv');
 const parseArgs = require('minimist');
 const fs = require('fs');
-
 
 const { sendToSlack }= require('./code/helpers');
 const postRoutes = require('./routes/post');
