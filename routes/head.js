@@ -9,7 +9,9 @@ const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 dotenv.config();
 const route = `/${process.env.route}`;
 
-router.head(route, (req, res) => { // mailchimp sends a head request to test the endpoint
+// we will set up Mailchimp to connect to two urls, one for unsubs and one for profile changes
+// as such, we need ot respond to head requests at both
+router.head(route + 'unsubscribe', (req, res) => { // mailchimp sends a head request to test the endpoint
     try {
         if(userAgentCheck(req)){
             if (argv['dev']) {
@@ -26,4 +28,20 @@ router.head(route, (req, res) => { // mailchimp sends a head request to test the
     }
 });
 
+router.head(route + 'profile', (req, res) => { // mailchimp sends a head request to test the endpoint
+    try {
+        if(userAgentCheck(req)){
+            if (argv['dev']) {
+                devStuff(req)
+            }
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(403)
+        }
+        
+    } catch (err) {
+        res.sendStatus(500)
+        sendToSlack(err.stack)
+    }
+});
 module.exports = router;

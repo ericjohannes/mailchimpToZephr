@@ -32,9 +32,18 @@ app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodie
 app.use(postRoutes);
 app.use(headRoutes);
 
+
+// get right certs on local machine or on ec2
+const ec2CertsPath = "/etc/certs/wildcard_protocol.com";
+let keyPath = 'certs/key.pem';
+let certPath = 'certs/cert.pem';
+if(fs.existsSync(ec2CertsPath)){
+    keyPath = `${ec2CertsPath}/star_protocol_com.key`;
+    keyPath = `${ec2CertsPath}/star_protocol_com.crt`;
+}
 const options = {
-    key: fs.readFileSync('certs/key.pem'),
-    cert: fs.readFileSync('certs/cert.pem')
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
 };
 
 https
