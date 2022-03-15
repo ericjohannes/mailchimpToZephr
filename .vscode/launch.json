@@ -32,7 +32,7 @@
             ],
             "program": "${workspaceFolder}/app.js",
             "restart": true,
-            "runtimeExecutable": "nodemon",
+            "runtimeExecutable": "node",
             "args": ["--dev=true", "--port=443"],
         },
         {

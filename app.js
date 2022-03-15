@@ -39,7 +39,7 @@ let keyPath = 'certs/key.pem';
 let certPath = 'certs/cert.pem';
 if(fs.existsSync(ec2CertsPath)){
     keyPath = `${ec2CertsPath}/star_protocol_com.key`;
-    keyPath = `${ec2CertsPath}/star_protocol_com.crt`;
+    certPath = `${ec2CertsPath}/star_protocol_com.crt`;
 }
 const options = {
     key: fs.readFileSync(keyPath),
