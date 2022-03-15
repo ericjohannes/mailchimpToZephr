@@ -1,6 +1,5 @@
 node_modules/*
 .env
-.vscode/*
 .DS_Store
 data/*.json
 data/*.csv
@@ -9,3 +8,4 @@ data/*
 certs/*.pem
 certs/*.certs
 *.log
+!.vscode/*.json
