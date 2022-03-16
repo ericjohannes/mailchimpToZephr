@@ -39,6 +39,13 @@ We use [pm2](https://pm2.keymetrics.io/) to run it in production so it restarts 
 
 The app outputs errors and messages about success to the channel `#mailchimp-zephr-app` in Protocol's slack.
 
+# Set up Mailchimp
+You will need to tell Mailchimp to talk to this app. To do so, create two webhooks. 
+1. Set one for "profile" changes and for the url use `<ip of server app is on><route from .env>profile`.
+2. Set second for "unsubsribe" events and for the url use `<ip of server app is on><route from .env>unsubscribe`.
+
+[See here](https://mailchimp.com/developer/marketing/guides/sync-audience-data-webhooks/) for more info on webhooks. 
+
 # Other scripts
 * `testApp.js` just logs all requests to it. Useful for testing server settings to make sure your port is open.
 * `scripts/testListener.js` useful for testing requests to this app. Run like `node scripts/testListener.js --port=443 --type=unsubscribe --host=localhost`. `host` is the host to connect to. If the app is running on the same machine `localhost` works. it can be an ip address. `port` is the port to connect to at that host. `type` can be `unsubscribe` or `profile` to test the app's ability to handle each type of requst.
