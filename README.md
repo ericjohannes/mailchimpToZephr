@@ -44,3 +44,4 @@ The app outputs errors and messages about success to the channel `#mailchimp-zep
 * `scripts/testListener.js` useful for testing requests to this app. Run like `node scripts/testListener.js --port=443 --type=unsubscribe --host=localhost`. `host` is the host to connect to. If the app is running on the same machine `localhost` works. it can be an ip address. `port` is the port to connect to at that host. `type` can be `unsubscribe` or `profile` to test the app's ability to handle each type of requst.
 * `scripts/syncClimate.js` a one-off script. It takes a `.csv` of users who subscribed to the Climate newsletter through an email before this app was set up (so their data did not get updated in Zephr). This script updates their Zephr data.
 * `scripts/syncPolicy.js` same but for Policy
+* `scripts/testSlack.js` just for testing the Slack integration
