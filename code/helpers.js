@@ -110,7 +110,20 @@ const policySyncWrapper = (groupsString)=>{
     // Doing that to only touch the Policy stuff rather than all their subscriptions
     const newsletters = buildPatchBody(groupsString);
     if(newsletters.policy){
-        return({policy: true})
+        return({policy: true, newsletter: true})
+    } else{
+        return false
+    }
+}
+
+const oneNewsletterWrapper = (groupsString, newsletter )=>{
+    // builds a patch body for sync script for one newsletter (like syncClimate.js)
+    // should  return only {[newsletter]: true} rather than all the newsletters they are subbed to 
+    // and only if they are subbed to that newsletter in mailchimp
+    // Doing that to only touch the newsletter stuff rather than all their subscriptions
+    const newsletters = buildPatchBody(groupsString);
+    if(newsletters[newsletter]){
+        return({[newsletter]: true, newsletter: true})
     } else{
         return false
     }
@@ -122,5 +135,6 @@ module.exports = {
     sendToSlack, 
     buildUnsubBody, 
     buildPatchBody,
-    policySyncWrapper
+    policySyncWrapper,
+    oneNewsletterWrapper
 };
