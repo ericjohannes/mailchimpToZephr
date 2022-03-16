@@ -12,9 +12,8 @@ This app runs on a server and creates a mini server that recieves requests from 
 
 
 # Before use
-You will need node installed on the machine you want to run it on. Clone this repo into a local directory, `cd` into it and run `npm install` to install dependencies.
-
-You will also need a `.env` file at the top of this directory looking like this with the right keys in it. 
+1. You will need node installed on the machine you want to run it on. Clone this repo into a local directory, `cd` into it and run `npm install` to install dependencies.
+2. You will also need a `.env` file at the top of this directory looking like this with the right keys in it. 
 
 ```
 zephrAccessKey=<key>
@@ -26,6 +25,7 @@ route=<random string>
 ```
 
 Ask someone who has these things for the right values. Or to redo this, `listId` and `uniqueId` come from Mailchimp (look at the body data). You can create the Zephr keys with your own admin account. You can also create your own Slack app to get a Slack token. The route was ramdonly generated. You would have to update the urls in Mailchimp's webhook if you change it.
+3. You will need `cert.pem` and `key.pem` in the `certs/` directory. [Steps to make those here](https://nodejs.org/en/knowledge/HTTP/servers/how-to-create-a-HTTPS-server/).
 
 # To use
 This is designed to run with [Node](https://nodejs.org/en/). The main app is `app.js`, but running it takes some command line arguments. 
