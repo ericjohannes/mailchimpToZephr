@@ -44,7 +44,7 @@ You will need to tell Mailchimp to talk to this app. To do so, create two webhoo
 1. Set one for "profile" changes and for the url use `<ip of server app is on><route from .env>profile`.
 2. Set second for "unsubsribe" events and for the url use `<ip of server app is on><route from .env>unsubscribe`.
 
-[See here](https://mailchimp.com/developer/marketing/guides/sync-audience-data-webhooks/) for more info on webhooks. 
+[See here](https://mailchimp.com/developer/marketing/guides/sync-audience-data-webhooks/) for more info on Mailchimp webhooks. 
 
 # Other scripts
 * `testApp.js` just logs all requests to it. Useful for testing server settings to make sure your port is open.
