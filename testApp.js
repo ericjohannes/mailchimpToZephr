@@ -29,7 +29,7 @@ const port = argv['port'];
 
 const route = `/${process.env.route}`;
 
-console.log('route', route);
+console.log('route', route + 'unsubscribe');
 
 app.all(route + 'unsubscribe', (req, res, next) => {
     console.log(req); // do anything you want here
