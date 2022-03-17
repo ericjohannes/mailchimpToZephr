@@ -3,8 +3,10 @@
 // runs with a command line argument --port for port to listen to
 
 const express = require('express')
-
+const fs = require('fs');
+const https = require("https");
 const parseArgs = require('minimist')
+
 const argv = parseArgs(process.argv.slice(2))
 
 // get right certs on local machine or on ec2
