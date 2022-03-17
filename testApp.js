@@ -6,6 +6,8 @@ const express = require('express')
 const fs = require('fs');
 const https = require("https");
 const parseArgs = require('minimist')
+const dotenv = require('dotenv')
+dotenv.config();
 
 const argv = parseArgs(process.argv.slice(2))
 
@@ -24,7 +26,12 @@ const options = {
 
 const app = express();
 const port = argv['port'];
-app.all("*", (req, res, next) => {
+
+const route = `/${process.env.route}`;
+
+console.log('route', route);
+
+app.all(route + 'unsubscribe', (req, res, next) => {
     console.log(req); // do anything you want here
     next();
     res.sendStatus(200)
