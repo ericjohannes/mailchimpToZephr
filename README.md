@@ -37,6 +37,8 @@ Example: `node app.js --dev=false --port=443`
 
 We use [pm2](https://pm2.keymetrics.io/) to run it in production so it restarts automatically and does other nice thigns. `ecosystem.config.js` configures how pm2 runs the script.
 
+Run all apps in that config file (so far just app.js) with `pm2 start ecosystem.config.js`
+
 The app outputs errors and messages about success to the channel `#mailchimp-zephr-app` in Protocol's slack.
 
 # Set up Mailchimp
