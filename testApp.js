@@ -7,6 +7,10 @@ const fs = require('fs');
 const https = require("https");
 const parseArgs = require('minimist')
 const dotenv = require('dotenv')
+
+const { simpleCheck, devStuff, sendToSlack, buildUnsubBody, buildPatchBody }= require('./code/helpers');
+
+
 dotenv.config();
 
 const argv = parseArgs(process.argv.slice(2))
@@ -31,8 +35,8 @@ const route = `/${process.env.route}`;
 
 console.log('route', route + 'unsubscribe');
 
-app.all(route + 'unsubscribe', (req, res, next) => {
-    console.log(req); // do anything you want here
+app.all('/', (req, res, next) => {
+    devStuff(req); // do anything you want here
     next();
     res.sendStatus(200)
 });

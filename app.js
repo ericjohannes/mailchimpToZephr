@@ -16,8 +16,11 @@ const parseArgs = require('minimist');
 const fs = require('fs');
 
 const { sendToSlack }= require('./code/helpers');
-const postRoutes = require('./routes/post');
+
+const getRoutes = require('./routes/get');
+
 const headRoutes = require('./routes/head');
+const postRoutes = require('./routes/post');
 
 const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] });
 
@@ -29,6 +32,8 @@ const port = argv['port'];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodies
+
+app.use(getRoutes);
 app.use(postRoutes);
 app.use(headRoutes);
 
