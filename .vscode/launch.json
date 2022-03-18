@@ -44,8 +44,8 @@
             ],
             "program": "${workspaceFolder}/scripts/testListener.js",
             "restart": true,
-            "runtimeExecutable": "nodemon",
-            "args": ["--port=3000", "--host=localhost", "--type=profile"]
+            "runtimeExecutable": "node",
+            "args": ["--port=443", "--host=localhost", "--type=profile"]
 
         },
         {
@@ -57,7 +57,7 @@
             ],
             "program": "${workspaceFolder}/scripts/testSlack.js",
             "restart": true,
-            "runtimeExecutable": "nodemon"
+            "runtimeExecutable": "node"
 
         }
     ]
