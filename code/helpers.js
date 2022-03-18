@@ -8,6 +8,7 @@ const userAgentCheck = (req)=>{
     const userAgents = ['MailChimp', 'MailChimp.com WebHook Validator', 'MailChimpToZephr Test']
     return userAgents.includes(req.headers["user-agent"])
 }
+
 const simpleCheck = (req) => {
     const listId = process.env.listId;
     return (req.body.data.list_id === listId && userAgentCheck(req))
@@ -136,5 +137,6 @@ module.exports = {
     buildUnsubBody, 
     buildPatchBody,
     policySyncWrapper,
-    oneNewsletterWrapper
+    oneNewsletterWrapper,
+    userAgentCheck
 };

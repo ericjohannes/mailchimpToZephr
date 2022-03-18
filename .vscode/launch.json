@@ -38,6 +38,18 @@
         {
             "type": "pwa-node",
             "request": "launch",
+            "name": "test app",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/testApp.js",
+            "restart": true,
+            "runtimeExecutable": "node",
+            "args": ["--dev=true", "--port=443"],
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
             "name": "node-test-listener",
             "skipFiles": [
                 "<node_internals>/**"

@@ -9,11 +9,9 @@ const argv = parseArgs(process.argv.slice(2), opts = { 'boolean': ['dev'] })
 dotenv.config();
 const route = `/${process.env.route}`;
 
-// mailchimps docs say they send a head request to check new webhook urls, so I wrote this
-// but it seems like they actually send get requests for that
-// so this might be superfluous
-
-router.head(route + 'unsubscribe', (req, res) => { 
+// we will set up Mailchimp to connect to two urls, one for unsubs and one for profile changes
+// as such, we need ot respond to head requests at both
+router.get(route + 'unsubscribe', (req, res) => { // mailchimp sends a head request to test the endpoint
     if (argv['dev']) {
         devStuff(req)
     }
@@ -33,7 +31,7 @@ router.head(route + 'unsubscribe', (req, res) => {
     }
 });
 
-router.head(route + 'profile', (req, res) => { // mailchimp sends a head request to test the endpoint
+router.get(route + 'profile', (req, res) => { // mailchimp sends a head request to test the endpoint
     try {
         if(userAgentCheck(req)){
             if (argv['dev']) {

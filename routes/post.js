@@ -12,13 +12,18 @@ const makeRequest = new MakeRequest();
 dotenv.config();
 const route = `/${process.env.route}`;
 const uniqueId = process.env.uniqueId;
+
 router.post(route + 'unsubscribe', (req, res) => {
-    try {            
+    try {       
+        if (argv['dev']) { // save data to disk if in dev
+            devStuff(req)
+        }     
         let message = "unhandled webhook"
+        if( req && req.body && req.body.type && typeof req.body.type == 'string'){
+            message = message + ` of type ${req.body.type} to unsubscribe`
+        }
         if(simpleCheck(req) && req.body.type === "unsubscribe" && isEmail(req.body.data.email)){ // check basic stuff and if it's unsub
-            if (argv['dev']) { // save data to disk if in dev
-                devStuff(req)
-            }
+
             let patchBody = {};
             console.log(`Request to unsubscribe ${req.body.data.email}`)
             patchBody = buildUnsubBody();
@@ -42,6 +47,9 @@ router.post(route + 'profile', (req, res) => {
             let message = "unhandled webhook"
             if (argv['dev']) {
                 devStuff(req)
+            }
+            if( req && req.body && req.body.type && typeof req.body.type == 'string'){
+                message = message + ` of type ${req.body.type} to profile`
             }
             let patchBody = {};
             const newsletters = req.body.data.merges.GROUPINGS.filter(group => group.unique_id == uniqueId); // unique_id is a hashed id specific to the protocol newsletters audience. It comes from .env
