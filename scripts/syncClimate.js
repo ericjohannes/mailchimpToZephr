@@ -9,8 +9,16 @@ const { MakeRequest } = require('../code/makeRequest');
 
 const makeRequest = new MakeRequest();
 
-const fn = "./data/members_Marketing_Climate_Pre_Launch_Email_To_All_Subs_click_activity_Mar_14_2022.csv"
-// const fn = "./data/test_climate.csv";
+// first file
+// const fn = "./data/members_Marketing_Climate_Pre_Launch_Email_To_All_Subs_click_activity_Mar_14_2022.csv"
+// const fn = "./data/test_climate.csv"; // test file
+
+// second file
+// const fn = "./data/NewsletterPromoSubs-Climate.csv";
+
+// third file
+const fn = "./data/members_Climate_First_Newsletter_Marketing_Email_click_activity_Mar_18_2022.csv";
+
 const failed_fn = "./data/failedToUpdateClimate.txt";
 // read in csv
 const fileData = fs.readFileSync(fn, 'utf8', (err, data) => {

@@ -10,6 +10,7 @@ const argv = parseArgs(process.argv.slice(2))
 const dotenv = require('dotenv');
 dotenv.config();
 
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 const bodyData = {
     'unsubscribe': JSON.stringify({
