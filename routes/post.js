@@ -58,6 +58,7 @@ router.post(route + 'profile', (req, res) => {
                 message = `Updating preferences for ${req.body.data.email}`;
                 // update data in zephr        
                 const result = makeRequest.makePatchRequest(req.body.data.email, patchBody)
+
                 res.json({ "result": message });
             } else {
                 message = `Received profile update for ${req.body.data.email} but 'groups' not found!`

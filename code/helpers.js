@@ -98,7 +98,13 @@ const buildPatchBody = (groupsString) => {
     const renameGroup = (groupName)=>{
         let newName = false; 
         if(groupName ==  "Protocol Alerts"){ // only  "Protocol Alerts" doesn't follow the pattern
-            newName = "alerts"
+            newName = "alerts";
+        }
+        else if(groupName == "Cloud"){
+            newName = "enterprise";
+        }
+        else if(groupName == "Index"){
+            newName = false; 
         }
         else if (groupName !=  "Protocol Alerts"){
             newName = groupName.toLowerCase(); // others are all lower case and use - instead of space

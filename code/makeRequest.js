@@ -62,7 +62,10 @@ class MakeRequest {
             
             const patchPath = `/v3/users/${result.user_id}/attributes`
             const secondResult = await this._makeRequest({ path: patchPath, method: 'PATCH', body: patchBody });
-            // const thirdResult = await this._makeRequest({ path: userPath, method: 'GET' });
+
+            if(secondResult.status == 400){
+                sendToSlack(`trouble updating profile for ${email}`);
+            }
             return secondResult
         } else{
             sendToSlack(`No user found in Zephr with email ${email}`)
