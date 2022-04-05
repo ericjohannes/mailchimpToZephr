@@ -67,6 +67,7 @@ const buildUnsubBody = () => {
         enterprise: false,
         entertainment: false,
         fintech: false,
+        gaming: false,
         newsletter: false,
         pipeline: false,
         policy: false,
@@ -79,23 +80,31 @@ const buildPatchBody = (groupsString) => {
     const groups = groupsString.split(",").map(item => item.trim()); // split on , and trim whitespace
 
     let groupsBody = {};
-    const groupsKey = {
-        "Protocol Alerts": "alerts",
-        Braintrust: "braintrust",
-        China: "china",
-        Climate: "climate",
-        Cloud: "enterprise",
-        Entertainment: "entertainment",
-        FinTech: "fintech",
-        Gaming: "gaming",
-        // Index: "index", // index is not in zephr
-        Pipeline: "pipeline",
-        Policy: "policy",
-        "Source Code": "source-code",
-        Workplace: "workplace",
+    // const groupsKey = {
+    //     "Protocol Alerts": "alerts",
+    //     Braintrust: "braintrust",
+    //     China: "china",
+    //     Climate: "climate",
+    //     Cloud: "enterprise",
+    //     Entertainment: "entertainment",
+    //     FinTech: "fintech",
+    //     Gaming: "gaming",
+    //     // Index: "index", // index is not in zephr
+    //     Pipeline: "pipeline",
+    //     Policy: "policy",
+    //     "Source Code": "source-code",
+    //     Workplace: "workplace",
+    // }
+    const renameGroup = (groupName)=>{
+        let newName = "alerts"; // only  "Protocol Alerts" doesn't follow the pattern
+        if(groupName !=  "Protocol Alerts"){
+            newName = groupName.toLowerCase(); // others are all lower case and use - instead of space
+            newName = newName.replace(" ", "-");
+        }
+        return newName
     }
     groups.forEach(group => {
-        let name = groupsKey[group] // if a name isn't on this list, don't add it
+        let name = renameGroup(group);
         if(name){
             groupsBody[name] = true;
         }
