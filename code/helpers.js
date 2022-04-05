@@ -74,6 +74,7 @@ const buildUnsubBody = () => {
         workplace: false,
     }
 }
+
 const buildPatchBody = (groupsString) => {
     const groups = groupsString.split(",").map(item => item.trim()); // split on , and trim whitespace
 
@@ -86,14 +87,19 @@ const buildPatchBody = (groupsString) => {
         Cloud: "enterprise",
         Entertainment: "entertainment",
         FinTech: "fintech",
+        Gaming: "gaming",
+        // Index: "index", // index is not in zephr
         Pipeline: "pipeline",
         Policy: "policy",
         "Source Code": "source-code",
         Workplace: "workplace",
     }
     groups.forEach(group => {
-        let name = groupsKey[group]
-        groupsBody[name] = true;
+        let name = groupsKey[group] // if a name isn't on this list, don't add it
+        if(name){
+            groupsBody[name] = true;
+        }
+        
     });
 
     // if the user is subbing to any newsletters (ie has any key in groups and the value for the key is true)
