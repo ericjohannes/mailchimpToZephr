@@ -54,3 +54,18 @@ You will need to tell Mailchimp to talk to this app. To do so, create two webhoo
 * `scripts/syncClimate.js` a one-off script. It takes a `.csv` of users who subscribed to the Climate newsletter through an email before this app was set up (so their data did not get updated in Zephr). This script updates their Zephr data.
 * `scripts/syncPolicy.js` same but for Policy
 * `scripts/testSlack.js` was just for testing the Slack integration
+
+## How to use a sync script
+As a warning, these scripts are not set up to be reused, and they only run on the command lin. You will likely have to write some code and run some code.
+
+If you are "syncing" data from one of the newsletters already handled (Climate and Policy) you will likely only have to chnage the name of the .csv file in the `fn` variable at the top of script. Just copy your new csv and paste it in there.
+
+If you are syncing data for a new newsletter, you will probably want to copy `syncClimate.js` or `syncPolicy.js`. They change the value of `fn` to your new csv and change all referecnes to `climate`, `Cliamte`, or `policy` etc. in the script to whatever your new newsletter is. If you do it right  it *should* work, but it's hard to guarantee without testing with your new data.
+
+Either way, now you have a `sync....js` script ready to run. Now you need to run it. You'll do so from the command line.
+1. you'll need [node](https://nodejs.org/en/), which is software that executes javascript on your computer. Download it through your browser or if you have [homebrew](https://brew.sh/) `brew install node`. 
+2. make sure your .csv file (that you referenced with `fn` in the sync script is) in the `/data` folder of this project on your machine.
+3. open your terminal. Use `cd` to navigate into the root folder of this project. Make sure you install all dependencies with `npm install`. [Help with the terminal](https://support.apple.com/guide/terminal/welcome/mac)
+4. run your script like `node scripts/<your script>.js`. For example, for the Policy script it's `node scripts/syncPolicy.js`
+
+It is always good to test. AN easy way to do that is to go to your new csv, copy the first line (iwth the headers) and the second line (first line with data) and paste into a new csv, call it something like `test.csv`. In the csv, replace the email with the email of a test account, like your own. Replace the `fn` with that name in your script. If you replaced the email with your own in all cases and in taht test file, and if you point the sync script to that test file, it should only affect the test account. now run the script as described above and see if changes you expect are made to that test account.
